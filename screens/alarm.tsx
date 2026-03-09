@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { loadData, saveAlarmTime } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
 const { Sound } = require('expo-av/build/Audio');
@@ -77,6 +78,10 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
   useEffect(() => {
     const d = new Date();
     setDate(`${DAYS[d.getDay()]}  ·  ${d.getDate()} ${MONTHS[d.getMonth()]}`);
+    loadData().then(data => {
+      setAlarmHour(data.alarmHour);
+      setAlarmMinute(data.alarmMinute);
+    });
     Animated.parallel([
       Animated.timing(fadeIn,   { toValue:1, duration:2000, useNativeDriver:true }),
       Animated.spring(orbScale, { toValue:1, useNativeDriver:true, damping:14 }),
@@ -255,6 +260,7 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
             <View style={{ height: 48 }} />
             <TouchableOpacity style={s.btn} onPress={() => {
               scheduleAlarmNotification();
+              saveAlarmTime(alarmHour, alarmMinute);
               triggerAlarm();
             }}>
               <Text style={s.btnText}>Set alarm  ›</Text>

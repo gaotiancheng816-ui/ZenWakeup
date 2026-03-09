@@ -6,6 +6,7 @@ import {
   Text,
   View
 } from 'react-native';
+import { playZenBowl } from '../utils/sounds';
 
 const { width, height } = Dimensions.get('window');
 
@@ -96,8 +97,10 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
 
   useEffect(() => {
     const t = setInterval(() => {
-      if (new Date().getHours() >= 18) onEvening && onEvening();
-    }, 60000);
+      const now = new Date();
+      if (now.getMinutes() === 0) playZenBowl();
+      if (now.getHours() >= 18) onEvening && onEvening()
+      }, 60000);
     return () => clearInterval(t);
   }, []);
 

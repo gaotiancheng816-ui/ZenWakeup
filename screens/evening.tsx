@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { playEveningTone } from '../utils/sounds';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,6 +47,7 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
   }, [cardIdx]);
 
   useEffect(() => {
+    playEveningTone();
     Animated.parallel([
       Animated.timing(fadeIn,    { toValue:1, duration:2000, useNativeDriver:true }),
       Animated.spring(moonScale, { toValue:1, useNativeDriver:true, damping:14 }),

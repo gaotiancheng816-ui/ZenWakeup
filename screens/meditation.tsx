@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { playBreathTone } from '../utils/sounds';
+import { updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -70,12 +72,13 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
     if (done) return;
     const cycle = () => {
       setPhase('inhale');
+      playBreathTone('inhale');
       breathAnim.current = Animated.sequence([
         Animated.timing(orbScale, { toValue:1.38, duration:4000, useNativeDriver:true }),
         Animated.timing(orbScale, { toValue:1.0,  duration:4000, useNativeDriver:true }),
       ]);
       breathAnim.current.start(({ finished }: { finished: boolean }) => {
-        if (finished) { setPhase('exhale'); setBreathCount((c: number) => c+1); cycle(); }
+        if (finished) { setPhase('exhale'); playBreathTone('exhale'); setBreathCount((c: number) => c+1); cycle(); }
       });
     };
     cycle();
@@ -86,7 +89,7 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
     if (done) return;
     const t = setInterval(() => {
       setSeconds((s: number) => {
-        if (s <= 1) { clearInterval(t); setDone(true); return 0; }
+        if (s <= 1) { clearInterval(t); setDone(true); updateTodayRecord({ morningDone: true, totalMinutes: 5 }); return 0; }
         return s - 1;
       });
     }, 1000);
@@ -204,7 +207,7 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
 
         <View style={{ height: 36 }} />
 
-        <TouchableOpacity onPress={() => setDone(true)}>
+        <TouchableOpacity onPress={() => { setDone(true); updateTodayRecord({ morningDone: true, totalMinutes: Math.floor((300 - seconds) / 60) + 1 }); }}>
           <Text style={s.skip}>skip  ›</Text>
         </TouchableOpacity>
 
