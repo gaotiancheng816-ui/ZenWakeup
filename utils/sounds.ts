@@ -1,4 +1,4 @@
-import { useAudioPlayer } from 'expo-audio';
+const FileSystem = require('expo-file-system/legacy');
 
 function generateWav(frequency: number, durationMs: number, volume: number): string {
   const sampleRate = 22050;
@@ -34,58 +34,44 @@ function generateWav(frequency: number, durationMs: number, volume: number): str
 
   const bytes = new Uint8Array(buffer);
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+async function playWav(frequency: number, durationMs: number, volume: number) {
+  try {
+    console.log('playWav called:', frequency);
+    const b64 = generateWav(frequency, durationMs, volume);
+    const path = FileSystem.cacheDirectory + `tone_${frequency}.wav`;
+
+    await FileSystem.writeAsStringAsync(path, b64, { encoding: 'base64' });
+
+    const { Sound } = require('expo-av/build/Audio');
+    const { sound } = await Sound.createAsync(
+      { uri: path },
+      { shouldPlay: true, volume }
+    );
+    sound.setOnPlaybackStatusUpdate((s: any) => {
+      if (s.isLoaded && s.didJustFinish) sound.unloadAsync();
+    });
+  } catch (e) {
+    console.log('playWav error:', e);
   }
-  return 'data:audio/wav;base64,' + btoa(binary);
 }
 
 export async function playAlarmBell() {
-  try {
-    const { AudioPlayer } = await import('expo-audio');
-    const uri = generateWav(528, 2000, 0.9);
-    const player = new AudioPlayer({ uri });
-    player.play();
-  } catch (e) {
-    console.log('playAlarmBell error:', e);
-  }
+  await playWav(528, 2000, 0.9);
+  setTimeout(() => playWav(660, 1500, 0.7), 1000);
 }
 
 export async function playBreathTone(phase: 'inhale' | 'exhale') {
-  try {
-    const { AudioPlayer } = await import('expo-audio');
-    const freq = phase === 'inhale' ? 396 : 285;
-    const uri = generateWav(freq, 600, 0.4);
-    const player = new AudioPlayer({ uri });
-    player.play();
-  } catch (e) {
-    console.log('playBreathTone error:', e);
-  }
+  await playWav(phase === 'inhale' ? 396 : 285, 600, 0.4);
 }
 
 export async function playZenBowl() {
-  try {
-    const { AudioPlayer } = await import('expo-audio');
-    const uri = generateWav(440, 3000, 0.9);
-    const player = new AudioPlayer({ uri });
-    player.play();
-  } catch (e) {
-    console.log('playZenBowl error:', e);
-  }
+  await playWav(440, 3000, 0.9);
 }
 
 export async function playEveningTone() {
-  try {
-    const { AudioPlayer } = await import('expo-audio');
-    const uri = generateWav(174, 3500, 0.5);
-    const player = new AudioPlayer({ uri });
-    player.play();
-  } catch (e) {
-    console.log('playEveningTone error:', e);
-  }
+  await playWav(174, 3500, 0.5);
 }
-```
-
-保存后运行：
-```
-npx expo start --clear
