@@ -75,6 +75,9 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
   const mist1Y   = useRef(new Animated.Value(0)).current;
   const brushY   = useRef(new Animated.Value(0)).current;
 
+  const hourBase   = useRef(0);
+  const minuteBase = useRef(0);
+
   useEffect(() => {
     const d = new Date();
     setDate(`${DAYS[d.getDay()]}  ·  ${d.getDate()} ${MONTHS[d.getMonth()]}`);
@@ -175,17 +178,31 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 
   const hourPan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      hourBase.current = 0;
+    },
     onPanResponderMove: (_, g) => {
-      const delta = Math.round(-g.dy / 20);
-      setAlarmHour(h => (h + delta + 24) % 24);
+      const delta = Math.round(-g.dy / 100);
+      if (delta !== hourBase.current) {
+        const diff = delta - hourBase.current;
+        hourBase.current = delta;
+        setAlarmHour(h => (h + diff + 24) % 24);
+      }
     },
   })).current;
 
   const minutePan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      minuteBase.current = 0;
+    },
     onPanResponderMove: (_, g) => {
-      const delta = Math.round(-g.dy / 20);
-      setAlarmMinute(m => (m + delta + 60) % 60);
+      const delta = Math.round(-g.dy / 100);
+      if (delta !== minuteBase.current) {
+        const diff = delta - minuteBase.current;
+        minuteBase.current = delta;
+        setAlarmMinute(m => (m + diff + 60) % 60);
+      }
     },
   })).current;
 

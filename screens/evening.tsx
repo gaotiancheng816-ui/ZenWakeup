@@ -10,6 +10,7 @@ import {
   View
 } from 'react-native';
 import { playEveningTone } from '../utils/sounds';
+import { updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -102,6 +103,7 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
         ]).start(() => {
           const next = cardIdxRef.current + 1;
           if (next >= REFLECTIONS.length) {
+            updateTodayRecord({ eveningDone: true, score });
             setPhase('done');
           } else {
             setCardIdx(next);
