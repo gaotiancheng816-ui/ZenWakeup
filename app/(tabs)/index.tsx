@@ -4,16 +4,21 @@ import AlarmScreen from '../../screens/alarm';
 import EveningScreen from '../../screens/evening';
 import DaytimeScreen from '../../screens/hourly';
 import MeditationScreen from '../../screens/meditation';
+import OnboardingScreen from '../../screens/onboarding';
 import SummaryScreen from '../../screens/summary';
 import { getTodayRecord, loadData } from '../../utils/storage';
 
-type Page = 'alarm' | 'meditation' | 'daytime' | 'evening' | 'summary' | 'loading';
+type Page = 'alarm' | 'meditation' | 'daytime' | 'evening' | 'summary' | 'loading' | 'onboarding';
 
 export default function App() {
   const [page, setPage] = useState<Page>('loading');
 
   useEffect(() => {
     loadData().then(data => {
+      if (!data.hasOnboarded) {
+        setPage('onboarding');
+        return;
+      }
       const today = getTodayRecord(data);
       const hour  = new Date().getHours();
 
@@ -37,6 +42,7 @@ export default function App() {
 
   return (
     <View style={s.root}>
+      {page === 'onboarding' && <OnboardingScreen onDone={() => setPage('alarm')} />}
       {page === 'alarm'      && <AlarmScreen      onDismiss={() => setPage('meditation')} />}
       {page === 'meditation' && <MeditationScreen onDone={()    => setPage('daytime')} />}
       {page === 'daytime'    && <DaytimeScreen    onEvening={()  => setPage('evening')} />}

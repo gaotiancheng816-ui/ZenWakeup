@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated, Dimensions, ScrollView,
-  StatusBar, StyleSheet, Text, View
+  StatusBar, StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
-import { AppData, DayRecord, getTodayRecord, loadData } from '../utils/storage';
+import { AppData, DayRecord, getTodayRecord, loadData, saveAlarmTime } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,9 +24,10 @@ const QUOTES   = [
 const AI_UNLOCK = 500;
 
 export default function DailySummaryScreen() {
-  const [appData,   setAppData]   = useState<AppData | null>(null);
-  const [todayRec,  setTodayRec]  = useState<DayRecord | null>(null);
+  const [appData,       setAppData]       = useState<AppData | null>(null);
+  const [todayRec,      setTodayRec]      = useState<DayRecord | null>(null);
   const [displayPoints, setDisplayPoints] = useState(0);
+  const [alarmSaved,    setAlarmSaved]    = useState(false);
 
   const fadeIn     = useRef(new Animated.Value(0)).current;
   const lineAnim   = useRef(new Animated.Value(0)).current;
@@ -85,9 +86,8 @@ export default function DailySummaryScreen() {
   const accumM      = accumMin % 60;
   const progressPct = Math.min(100, Math.round((appData.allPoints / AI_UNLOCK) * 100));
   const lineWidth   = lineAnim.interpolate({ inputRange:[0,1], outputRange:['0%','100%'] });
-
-  const alarmH = String(appData.alarmHour).padStart(2,'0');
-  const alarmM = String(appData.alarmMinute).padStart(2,'0');
+  const alarmH      = String(appData.alarmHour).padStart(2,'0');
+  const alarmM      = String(appData.alarmMinute).padStart(2,'0');
 
   return (
     <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
@@ -214,7 +214,40 @@ export default function DailySummaryScreen() {
 
         <View style={{ height: 56 }} />
         <Text style={s.seeYou}>Until tomorrow</Text>
-        <Text style={s.nextAlarm}>Next morning  ·  {alarmH}:{alarmM}</Text>
+        <View style={{ height: 24 }} />
+
+        <View style={s.alarmSetRow}>
+          <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmHour:(d.alarmHour-1+24)%24} : d)} style={s.alarmArrow}>
+            <Text style={s.alarmArrowText}>◀</Text>
+          </TouchableOpacity>
+          <Text style={s.alarmTime}>{alarmH}:{alarmM}</Text>
+          <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmHour:(d.alarmHour+1)%24} : d)} style={s.alarmArrow}>
+            <Text style={s.alarmArrowText}>▶</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={s.alarmMinRow}>
+          <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmMinute:(d.alarmMinute-5+60)%60} : d)} style={s.alarmArrow}>
+            <Text style={s.alarmArrowText}>◀</Text>
+          </TouchableOpacity>
+          <Text style={s.alarmMinLabel}>{alarmM}</Text>
+          <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmMinute:(d.alarmMinute+5)%60} : d)} style={s.alarmArrow}>
+            <Text style={s.alarmArrowText}>▶</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={s.saveAlarmBtn} onPress={async () => {
+          if (!appData) return;
+          await saveAlarmTime(appData.alarmHour, appData.alarmMinute);
+          setAlarmSaved(true);
+          setTimeout(() => setAlarmSaved(false), 2000);
+        }}>
+          <Text style={s.saveAlarmText}>Save alarm  ›</Text>
+        </TouchableOpacity>
+
+        {alarmSaved && (
+          <Text style={s.savedHint}>Alarm saved  ✓</Text>
+        )}
+
         <View style={{ height: 80 }} />
 
       </Animated.View>
@@ -278,6 +311,14 @@ const s = StyleSheet.create({
   quoteBlock:     { width:'100%', alignItems:'center', paddingVertical:8 },
   quoteDash:      { fontSize:11, color:INK3, letterSpacing:4, opacity:0.35 },
   quoteText:      { fontSize:14, color:INK2, letterSpacing:2, fontStyle:'italic', textAlign:'center', lineHeight:24 },
-  seeYou:         { fontSize:22, color:INK2, letterSpacing:8, fontWeight:'300', marginBottom:12 },
-  nextAlarm:      { fontSize:11, color:INK3, letterSpacing:4, opacity:0.5 },
+  seeYou:         { fontSize:22, color:INK2, letterSpacing:8, fontWeight:'300' },
+  alarmSetRow:    { flexDirection:'row', alignItems:'center', gap:20 },
+  alarmMinRow:    { flexDirection:'row', alignItems:'center', gap:20, marginTop:12 },
+  alarmArrow:     { padding:12 },
+  alarmArrowText: { fontSize:14, color:INK3, opacity:0.5 },
+  alarmTime:      { fontSize:48, color:INK, fontWeight:'200', letterSpacing:6 },
+  alarmMinLabel:  { fontSize:24, color:INK2, fontWeight:'200', letterSpacing:4, minWidth:60, textAlign:'center' },
+  saveAlarmBtn:   { marginTop:24, borderWidth:1, borderColor:'rgba(42,46,36,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
+  saveAlarmText:  { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
+  savedHint:      { fontSize:11, color:GOLD, letterSpacing:3, marginTop:12 },
 });

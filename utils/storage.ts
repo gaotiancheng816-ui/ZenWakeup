@@ -12,6 +12,8 @@ export interface AppData {
   alarmHour: number;
   alarmMinute: number;
   allPoints: number;
+  meditationMinutes: number;
+  hasOnboarded: boolean;
   records: DayRecord[];
 }
 
@@ -19,6 +21,8 @@ const DEFAULT: AppData = {
   alarmHour: 6,
   alarmMinute: 0,
   allPoints: 0,
+  meditationMinutes: 5,
+  hasOnboarded: false,
   records: [],
 };
 
@@ -86,5 +90,16 @@ export async function saveAlarmTime(hour: number, minute: number): Promise<void>
   const data = await loadData();
   data.alarmHour = hour;
   data.alarmMinute = minute;
+  await saveData(data);
+}
+
+export async function completeOnboarding(
+  hour: number, minute: number, minutes: number
+): Promise<void> {
+  const data = await loadData();
+  data.hasOnboarded = true;
+  data.alarmHour = hour;
+  data.alarmMinute = minute;
+  data.meditationMinutes = minutes;
   await saveData(data);
 }

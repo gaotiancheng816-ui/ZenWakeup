@@ -4,6 +4,7 @@ import {
   Dimensions, StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from 'react-native';
 import { playZenBowl } from '../utils/sounds';
@@ -99,8 +100,7 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
     const t = setInterval(() => {
       const now = new Date();
       if (now.getMinutes() === 0) playZenBowl();
-      if (now.getHours() >= 18) onEvening && onEvening()
-      }, 60000);
+    }, 60000);
     return () => clearInterval(t);
   }, []);
 
@@ -184,6 +184,12 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
         <Text style={s.hint}>A gentle bell sounds every hour</Text>
         <Text style={s.hintSub}>No task · just a moment of awareness</Text>
 
+        <View style={{ height: 40 }} />
+
+        <TouchableOpacity style={s.reflectBtn} onPress={() => onEvening && onEvening()}>
+          <Text style={s.reflectBtnText}>Begin today's reflection  ›</Text>
+        </TouchableOpacity>
+
       </Animated.View>
     </View>
   );
@@ -226,4 +232,6 @@ const s = StyleSheet.create({
 
   hint:    { fontSize:11, color:INK2, letterSpacing:2, opacity:0.6 },
   hintSub: { fontSize:10, color:INK3, letterSpacing:1, opacity:0.45, fontStyle:'italic', marginTop:4 },
+  reflectBtn:     { borderWidth:1, borderColor:'rgba(42,46,36,0.25)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
+  reflectBtnText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
 });
