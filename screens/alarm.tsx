@@ -259,16 +259,24 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
         {phase === 'set' ? (
           <>
             <View style={s.timePickerRow}>
-              <View style={s.pickerCol} {...hourPan.panHandlers}>
-                <Text style={s.pickerArrow}>▲</Text>
+              <View style={s.pickerCol}>
+                <TouchableOpacity onPress={() => setAlarmHour(h => (h+1)%24)} style={s.arrowBtn}>
+                  <Text style={s.pickerArrow}>▲</Text>
+                </TouchableOpacity>
                 <Text style={s.pickerNum}>{hh}</Text>
-                <Text style={s.pickerArrow}>▼</Text>
+                <TouchableOpacity onPress={() => setAlarmHour(h => (h-1+24)%24)} style={s.arrowBtn}>
+                  <Text style={s.pickerArrow}>▼</Text>
+                </TouchableOpacity>
               </View>
               <Text style={s.pickerColon}>:</Text>
-              <View style={s.pickerCol} {...minutePan.panHandlers}>
-                <Text style={s.pickerArrow}>▲</Text>
+              <View style={s.pickerCol}>
+                <TouchableOpacity onPress={() => setAlarmMinute(m => (m+5)%60)} style={s.arrowBtn}>
+                  <Text style={s.pickerArrow}>▲</Text>
+                </TouchableOpacity>
                 <Text style={s.pickerNum}>{mm}</Text>
-                <Text style={s.pickerArrow}>▼</Text>
+                <TouchableOpacity onPress={() => setAlarmMinute(m => (m-5+60)%60)} style={s.arrowBtn}>
+                  <Text style={s.pickerArrow}>▼</Text>
+                </TouchableOpacity>
               </View>
             </View>
             <View style={{ height: 12 }} />
@@ -322,6 +330,7 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', BG = '#dedad2';
 
 const s = StyleSheet.create({
+  arrowBtn: { padding:12 },
   root:       { flex:1, backgroundColor:BG },
   mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.045)', top:height*0.45, left:-width*0.2 },
   mountain2:  { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:'rgba(30,32,48,0.035)', top:height*0.48, left:width*0.1 },
