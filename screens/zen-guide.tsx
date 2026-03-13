@@ -1,60 +1,83 @@
 import { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', BG = '#dedad2';
 
-// 坐禅人物SVG
+// 坐禅人物SVG — 线条风格，与 onboarding 水墨线稿一致
 function ZenFigure() {
   return (
     <Svg width={220} height={220} viewBox="0 0 220 220">
       {/* 地面线 */}
-      <Line x1="30" y1="175" x2="190" y2="175" stroke={INK} strokeWidth="1" opacity="0.2"/>
+      <Line x1="40" y1="178" x2="180" y2="178" stroke={INK} strokeWidth="0.8" opacity="0.2"/>
 
-      {/* 坐垫 */}
-      <Ellipse cx="110" cy="172" rx="52" ry="10" fill={INK} opacity="0.12"/>
+      {/* 坐垫轮廓 */}
+      <Ellipse cx="110" cy="175" rx="50" ry="9"
+        fill="none" stroke={INK} strokeWidth="0.8" opacity="0.18"/>
 
-      {/* 盘腿 左腿 */}
-      <Path d="M75,155 Q65,165 60,162 Q55,158 70,152 Z" fill={INK} opacity="0.7"/>
-      {/* 盘腿 右腿 */}
-      <Path d="M145,155 Q155,165 160,162 Q165,158 150,152 Z" fill={INK} opacity="0.7"/>
-
-      {/* 身体 */}
+      {/* 左腿 */}
       <Path
-        d="M90,155 Q88,130 92,115 Q95,105 110,103 Q125,105 128,115 Q132,130 130,155 Z"
-        fill={INK} opacity="0.75"
-      />
+        d="M82,158 Q72,168 62,164 Q68,155 82,152"
+        fill="none" stroke={INK} strokeWidth="1.1"
+        strokeLinecap="round" strokeLinejoin="round" opacity="0.65"/>
 
-      {/* 双手合十 / 禅定印 */}
-      <Ellipse cx="110" cy="148" rx="16" ry="8" fill={INK} opacity="0.6"/>
+      {/* 右腿 */}
+      <Path
+        d="M138,158 Q148,168 158,164 Q152,155 138,152"
+        fill="none" stroke={INK} strokeWidth="1.1"
+        strokeLinecap="round" strokeLinejoin="round" opacity="0.65"/>
+
+      {/* 膝盖连线 */}
+      <Path
+        d="M82,155 Q110,160 138,155"
+        fill="none" stroke={INK} strokeWidth="0.8"
+        strokeLinecap="round" opacity="0.4"/>
+
+      {/* 身体轮廓 */}
+      <Path
+        d="M96,155 Q94,135 96,118 Q100,108 110,106 Q120,108 124,118 Q126,135 124,155"
+        fill="none" stroke={INK} strokeWidth="1.1"
+        strokeLinecap="round" strokeLinejoin="round" opacity="0.65"/>
+
+      {/* 双手禅定印 — 空心椭圆 */}
+      <Ellipse cx="110" cy="150" rx="14" ry="6"
+        fill="none" stroke={INK} strokeWidth="0.9" opacity="0.45"/>
 
       {/* 颈部 */}
-      <Path d="M104,103 Q110,98 116,103" fill={INK} opacity="0.6"/>
+      <Line x1="110" y1="106" x2="110" y2="98"
+        stroke={INK} strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
 
-      {/* 头部 */}
-      <Circle cx="110" cy="88" r="18" fill={INK} opacity="0.72"/>
+      {/* 头部 — 空心圆 */}
+      <Circle cx="110" cy="84" r="16"
+        fill="none" stroke={INK} strokeWidth="1.1" opacity="0.65"/>
 
-      {/* 呼吸圆圈 — 从头顶发散 */}
-      <Circle cx="110" cy="60" r="12" fill="none" stroke={INK} strokeWidth="1" opacity="0.2"/>
-      <Circle cx="110" cy="60" r="22" fill="none" stroke={INK} strokeWidth="0.8" opacity="0.12"/>
-      <Circle cx="110" cy="60" r="34" fill="none" stroke={INK} strokeWidth="0.6" opacity="0.07"/>
+      {/* 呼吸涟漪圈 — 从头顶发散 */}
+      <Circle cx="110" cy="56" r="10"
+        fill="none" stroke={INK} strokeWidth="0.7" opacity="0.18"/>
+      <Circle cx="110" cy="56" r="20"
+        fill="none" stroke={INK} strokeWidth="0.5" opacity="0.11"/>
+      <Circle cx="110" cy="56" r="32"
+        fill="none" stroke={INK} strokeWidth="0.4" opacity="0.06"/>
+
+      {/* 金色中心点 */}
+      <Circle cx="110" cy="56" r="2.5" fill="#8a7040" opacity="0.5"/>
 
       {/* 水墨装饰点 */}
-      <Circle cx="58" cy="140" r="2" fill={INK} opacity="0.15"/>
-      <Circle cx="54" cy="148" r="1.2" fill={INK} opacity="0.1"/>
-      <Circle cx="162" cy="138" r="1.8" fill={INK} opacity="0.13"/>
-      <Circle cx="166" cy="146" r="1" fill={INK} opacity="0.08"/>
+      <Circle cx="60" cy="145" r="1.8" fill={INK} opacity="0.12"/>
+      <Circle cx="56" cy="152" r="1.2" fill={INK} opacity="0.08"/>
+      <Circle cx="160" cy="143" r="1.5" fill={INK} opacity="0.10"/>
+      <Circle cx="164" cy="150" r="1"   fill={INK} opacity="0.07"/>
 
       {/* 地面水墨晕 */}
-      <Ellipse cx="110" cy="178" rx="70" ry="6" fill={INK} opacity="0.04"/>
+      <Ellipse cx="110" cy="180" rx="68" ry="5" fill={INK} opacity="0.03"/>
     </Svg>
   );
 }
