@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { completeOnboarding } from '../utils/storage';
 
@@ -54,7 +54,7 @@ const SLIDES = [
     kanji: '明',
     title: 'What Awaits You',
     sub: 'With practice, the noise softens.\nYou begin to respond rather than react.\nYou sleep better. Wake lighter.\nYou become more — you.',
-    hint: 'Begin by setting your wake time.',
+    hint: '',
   },
 ];
 
@@ -104,7 +104,7 @@ export default function OnboardingScreen({ onDone }: Props) {
     ]).start();
   }
 
-  function goNext() {
+  async function goNext() {
     if (slideIdx < SLIDES.length - 1) {
       Animated.timing(fadeAnim, { toValue:0, duration:250, useNativeDriver:true }).start(() => {
         setSlideIdx(i => i + 1);
@@ -112,12 +112,9 @@ export default function OnboardingScreen({ onDone }: Props) {
         Animated.timing(fadeAnim, { toValue:1, duration:400, useNativeDriver:true }).start();
       });
     } else {
-      // Last slide → show alarm setup
-      Animated.timing(fadeAnim, { toValue:0, duration:300, useNativeDriver:true }).start(() => {
-        setShowSetup(true);
-        Animated.timing(fadeAnim, { toValue:1, duration:500, useNativeDriver:true }).start();
-      });
-    }
+  await completeOnboarding(6, 0, 5);
+  onDone();
+}
   }
 
   async function handleBegin() {
@@ -168,67 +165,6 @@ export default function OnboardingScreen({ onDone }: Props) {
       <View style={s.cornerBR} />
     </>
   );
-
-  if (showSetup) {
-    return (
-      <View style={s.root}>
-        <BgElements />
-        <Animated.View style={[s.content, { opacity: fadeAnim }]}>
-
-          {/* Decorative kanji */}
-          <Text style={s.setupKanji}>醒</Text>
-          <View style={{ height: 8 }} />
-
-          <Text style={s.setupTitle}>Set Your Wake Time</Text>
-          <View style={{ height: 8 }} />
-          <Text style={s.setupSub}>Tomorrow, ZenWakeup will gently{'\n'}wake you for your first meditation.</Text>
-
-          <View style={{ height: 48 }} />
-
-          {/* Time picker */}
-          <View style={s.timeRow}>
-            {/* Hour */}
-            <View style={s.pickerCol}>
-              <TouchableOpacity onPress={() => setAlarmHour(h => (h+1)%24)} style={s.arrowBtn}>
-                <Text style={s.arrowText}>▲</Text>
-              </TouchableOpacity>
-              <Text style={s.pickerNum}>{hh}</Text>
-              <TouchableOpacity onPress={() => setAlarmHour(h => (h-1+24)%24)} style={s.arrowBtn}>
-                <Text style={s.arrowText}>▼</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={s.colon}>:</Text>
-
-            {/* Minute */}
-            <View style={s.pickerCol}>
-              <TouchableOpacity onPress={() => setAlarmMinute(m => (m+5)%60)} style={s.arrowBtn}>
-                <Text style={s.arrowText}>▲</Text>
-              </TouchableOpacity>
-              <Text style={s.pickerNum}>{mm}</Text>
-              <TouchableOpacity onPress={() => setAlarmMinute(m => (m-5+60)%60)} style={s.arrowBtn}>
-                <Text style={s.arrowText}>▼</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={{ height: 8 }} />
-          <Text style={s.minuteHint}>Minutes adjust in steps of 5</Text>
-
-          <View style={{ height: 56 }} />
-
-          <TouchableOpacity style={s.beginBtn} onPress={handleBegin}>
-            <Text style={s.beginBtnText}>Begin my practice  ›</Text>
-          </TouchableOpacity>
-
-          <View style={{ height: 20 }} />
-          <Text style={s.beginHint}>Your first meditation is 5 minutes</Text>
-
-        </Animated.View>
-      </View>
-    );
-  }
-
   return (
     <View style={s.root}>
       <BgElements />
@@ -272,20 +208,13 @@ export default function OnboardingScreen({ onDone }: Props) {
 
         <TouchableOpacity style={s.nextBtn} onPress={goNext}>
           <Text style={s.nextBtnText}>
-            {slideIdx < SLIDES.length - 1 ? 'Next  ›' : 'Begin  ›'}
+            {'Next  ›'}
           </Text>
         </TouchableOpacity>
 
-        {slideIdx > 0 && (
-          <TouchableOpacity style={s.skipBtn} onPress={() => {
-            Animated.timing(fadeAnim, { toValue:0, duration:200, useNativeDriver:true }).start(() => {
-              setShowSetup(true);
-              Animated.timing(fadeAnim, { toValue:1, duration:400, useNativeDriver:true }).start();
-            });
-          }}>
+          <TouchableOpacity style={s.skipBtn} onPress={onDone}>
             <Text style={s.skipText}>skip intro</Text>
           </TouchableOpacity>
-        )}
 
       </Animated.View>
     </View>

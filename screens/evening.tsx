@@ -24,7 +24,7 @@ const SCORE_LABELS = ['Heavy','Tired','Neutral','Light','Fulfilled'];
 const MOON         = ['🌑','🌒','🌓','🌔','🌕'];
 
 export default function EveningReturnScreen({ onDone }: { onDone?: () => void }) {
-  const [phase, setPhase]     = useState<'enter'|'score'|'reflect'|'done'>('enter');
+  const [phase, setPhase] = useState<'enter'|'score'|'reflect'|'done'>('score');
   const [score, setScore]     = useState(2);
   const [cardIdx, setCardIdx] = useState(0);
 

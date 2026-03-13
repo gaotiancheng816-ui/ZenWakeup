@@ -80,7 +80,7 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 
   useEffect(() => {
     const d = new Date();
-    setDate(`${DAYS[d.getDay()]}  ·  ${d.getDate()} ${MONTHS[d.getMonth()]}`);
+    setDate(`${DAYS[d.getDay()]}  ${d.getDate()} ${MONTHS[d.getMonth()]}`);
     loadData().then(data => {
       setAlarmHour(data.alarmHour);
       setAlarmMinute(data.alarmMinute);
@@ -333,7 +333,7 @@ const s = StyleSheet.create({
   cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(30,32,48,0.06)', top:height*0.55, right:-15 },
 
   content:      { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
-  dateStr:      { fontSize:11, color:INK3, letterSpacing:5, fontWeight:'300', marginBottom:32 },
+  dateStr:      { fontSize:25, color:INK3, letterSpacing:5, fontWeight:'300', marginBottom:32 },
 
   timePickerRow: { flexDirection:'row', alignItems:'center', gap:16 },
   pickerCol:     { alignItems:'center', gap:12, paddingHorizontal:16, paddingVertical:8 },
