@@ -6,9 +6,10 @@ import DaytimeScreen from '../../screens/hourly';
 import IntroMeditationScreen from '../../screens/intro-meditation';
 import MeditationScreen from '../../screens/meditation';
 import OnboardingScreen from '../../screens/onboarding';
+import PaywallScreen from '../../screens/paywall';
 import SummaryScreen from '../../screens/summary';
 import ZenGuideScreen from '../../screens/zen-guide';
-import { loadData } from '../../utils/storage';
+import { getTrialStatus, loadData } from '../../utils/storage';
 
 type Page =
   | 'loading'
@@ -19,18 +20,29 @@ type Page =
   | 'meditation'
   | 'daytime'
   | 'evening'
-  | 'summary';
+  | 'summary'
+  | 'paywall';
 
 export default function App() {
   const [page, setPage] = useState<Page>('loading');
+  const [daysLeft, setDaysLeft] = useState(7);
 
   useEffect(() => {
-    loadData().then(data => {
+    loadData().then(async data => {
       if (!data.hasOnboarded) {
         setPage('onboarding');
-      } else {
-        setPage('alarm');
+        return;
       }
+
+      const trial = await getTrialStatus();
+
+      if (!trial.isPurchased && trial.trialExpired) {
+        setPage('paywall');
+        return;
+      }
+
+      setDaysLeft(trial.daysLeft);
+      setPage('alarm');
     });
   }, []);
 
@@ -46,6 +58,7 @@ export default function App() {
       {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
       {page === 'evening'          && <EveningScreen          onDone={() => setPage('summary')} />}
       {page === 'summary'          && <SummaryScreen />}
+      {page === 'paywall'          && <PaywallScreen trialExpired={true} daysLeft={daysLeft} />}
     </View>
   );
 }

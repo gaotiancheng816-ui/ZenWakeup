@@ -15,6 +15,9 @@ export interface AppData {
   meditationMinutes: number;
   hasOnboarded: boolean;
   records: DayRecord[];
+  // 试用 & 付费
+  trialStartDate: string | null;   // 首次启动日期 'YYYY-MM-DD'
+  isPurchased: boolean;            // 是否已买断
 }
 
 const DEFAULT: AppData = {
@@ -24,6 +27,8 @@ const DEFAULT: AppData = {
   meditationMinutes: 5,
   hasOnboarded: false,
   records: [],
+  trialStartDate: null,
+  isPurchased: false,
 };
 
 const KEY = 'zenwakeup_data';
@@ -101,5 +106,45 @@ export async function completeOnboarding(
   data.alarmHour = hour;
   data.alarmMinute = minute;
   data.meditationMinutes = minutes;
+  await saveData(data);
+}
+// 获取试用状态
+export async function getTrialStatus(): Promise<{
+  isTrialActive: boolean;
+  isPurchased: boolean;
+  daysLeft: number;
+  trialExpired: boolean;
+}> {
+  const data = await loadData();
+
+  if (data.isPurchased) {
+    return { isTrialActive: false, isPurchased: true, daysLeft: 0, trialExpired: false };
+  }
+
+  if (!data.trialStartDate) {
+    // 第一次启动，记录试用开始日期
+    const today = todayStr();
+    data.trialStartDate = today;
+    await saveData(data);
+    return { isTrialActive: true, isPurchased: false, daysLeft: 7, trialExpired: false };
+  }
+
+  const start = new Date(data.trialStartDate);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const daysLeft = Math.max(0, 7 - diffDays);
+
+  return {
+    isTrialActive: daysLeft > 0,
+    isPurchased: false,
+    daysLeft,
+    trialExpired: daysLeft === 0,
+  };
+}
+
+// 标记为已购买（RevenueCat 接入后调用这个）
+export async function setPurchased(): Promise<void> {
+  const data = await loadData();
+  data.isPurchased = true;
   await saveData(data);
 }
