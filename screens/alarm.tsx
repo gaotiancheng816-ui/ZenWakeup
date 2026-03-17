@@ -12,11 +12,10 @@ import {
 } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { getMorningGreeting } from '../utils/greetings';
+import { playAlarmBell } from '../utils/sounds';
 import { loadData, saveAlarmTime } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
-const { Sound } = require('expo-av/build/Audio');
-const FileSystem = require('expo-file-system/legacy');
 
 const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
 
@@ -25,6 +24,9 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const TRACK_W = width - 80;
 const THUMB   = 52;
 const MAX_X   = TRACK_W - THUMB - 4;
+
+const MIN_HOUR = 4;
+const MAX_HOUR = 10;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -35,50 +37,35 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// ── 山水插图 — 设置页主视觉 ──────────────────
 function MountainIcon() {
   return (
     <Svg width={240} height={140} viewBox="0 0 160 95">
-      {/* back-left mountain */}
       <Path d="M10,90 L32,55 L54,90Z" fill="none" stroke={INK} strokeWidth={0.6} opacity={0.22}/>
-      {/* back-right mountain */}
       <Path d="M106,90 L128,60 L150,90Z" fill="none" stroke={INK} strokeWidth={0.6} opacity={0.20}/>
-      {/* main mountain */}
       <Path d="M38,90 L80,18 L122,90Z" fill={BG} stroke={INK} strokeWidth={1.2} strokeLinejoin="round" opacity={0.75}/>
-      {/* horizon */}
       <Line x1={10} y1={90} x2={150} y2={90} stroke={INK} strokeWidth={0.5} opacity={0.20}/>
-      {/* mist lines */}
       <Line x1={10} y1={72} x2={38}  y2={72} stroke={INK} strokeWidth={0.4} opacity={0.15}/>
       <Line x1={122} y1={68} x2={150} y2={68} stroke={INK} strokeWidth={0.4} opacity={0.12}/>
-      {/* sun */}
       <Circle cx={130} cy={30} r={8}   fill="none" stroke={GOLD} strokeWidth={0.9} opacity={0.65}/>
       <Circle cx={130} cy={30} r={3}   fill={GOLD} opacity={0.5}/>
       <Line x1={130} y1={18} x2={130} y2={21} stroke={GOLD} strokeWidth={0.7} opacity={0.45}/>
       <Line x1={120} y1={22} x2={122} y2={24} stroke={GOLD} strokeWidth={0.6} opacity={0.35}/>
       <Line x1={140} y1={22} x2={138} y2={24} stroke={GOLD} strokeWidth={0.6} opacity={0.35}/>
-      {/* vertical ink strokes */}
       <Line x1={155} y1={10} x2={155} y2={90} stroke={INK} strokeWidth={0.8} opacity={0.05}/>
       <Line x1={152} y1={20} x2={152} y2={90} stroke={INK} strokeWidth={0.5} opacity={0.04}/>
     </Svg>
   );
 }
 
-// ── 呼吸球内山水缩略图 — 响铃页 ──────────────
 function OrbMountain() {
   return (
     <Svg width={100} height={100} viewBox="0 0 100 100">
-      {/* back-left */}
       <Path d="M10,68 L28,42 L46,68Z" fill="none" stroke={INK} strokeWidth={0.6} opacity={0.22}/>
-      {/* back-right */}
       <Path d="M54,68 L72,46 L90,68Z" fill="none" stroke={INK} strokeWidth={0.6} opacity={0.20}/>
-      {/* main mountain */}
       <Path d="M22,68 L50,18 L78,68Z" fill={BG} stroke={INK} strokeWidth={1.1} strokeLinejoin="round" opacity={0.75}/>
-      {/* horizon */}
       <Line x1={10} y1={68} x2={90} y2={68} stroke={INK} strokeWidth={0.4} opacity={0.20}/>
-      {/* mist */}
       <Line x1={10} y1={55} x2={28} y2={55} stroke={INK} strokeWidth={0.4} opacity={0.14}/>
       <Line x1={72} y1={52} x2={90} y2={52} stroke={INK} strokeWidth={0.4} opacity={0.12}/>
-      {/* sun */}
       <Circle cx={80} cy={26} r={6}   fill="none" stroke={GOLD} strokeWidth={0.8} opacity={0.65}/>
       <Circle cx={80} cy={26} r={2.2} fill={GOLD} opacity={0.5}/>
       <Line x1={80} y1={17} x2={80} y2={19} stroke={GOLD} strokeWidth={0.6} opacity={0.45}/>
@@ -88,7 +75,6 @@ function OrbMountain() {
   );
 }
 
-// ── 滑块莲花图标 ──────────────────────────────
 function ThumbLotus() {
   return (
     <Svg width={32} height={32} viewBox="0 0 90 90">
@@ -106,42 +92,15 @@ function ThumbLotus() {
   );
 }
 
-function generateWav(frequency: number, durationMs: number, volume: number): string {
-  const sampleRate = 22050;
-  const numSamples = Math.floor(sampleRate * durationMs / 1000);
-  const dataSize = numSamples * 2;
-  const buffer = new ArrayBuffer(44 + dataSize);
-  const view = new DataView(buffer);
-  const write = (offset: number, str: string) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-  };
-  write(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true);
-  write(8, 'WAVE'); write(12, 'fmt ');
-  view.setUint32(16, 16, true); view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true); write(36, 'data');
-  view.setUint32(40, dataSize, true);
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    const env = Math.exp(-t * 1.5);
-    const val = Math.sin(2 * Math.PI * frequency * t) * env * volume;
-    view.setInt16(44 + i * 2, Math.round(val * 32767), true);
-  }
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
-
 export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }) {
   const [alarmHour,   setAlarmHour]   = useState(6);
   const [alarmMinute, setAlarmMinute] = useState(0);
   const [date,        setDate]        = useState('');
   const [phase,       setPhase]       = useState<'set'|'ringing'>('set');
   const [greeting,    setGreeting]    = useState('');
+  const [confirmed,   setConfirmed]   = useState(false);
 
-  const soundRef = useRef<any>(null);
+  const triggeredRef = useRef(false);
   const fadeIn   = useRef(new Animated.Value(0)).current;
   const orbScale = useRef(new Animated.Value(0.96)).current;
   const thumbX   = useRef(new Animated.Value(0)).current;
@@ -155,8 +114,9 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
     const d = new Date();
     setDate(`${DAYS[d.getDay()]}  ${d.getDate()} ${MONTHS[d.getMonth()]}`);
     loadData().then(data => {
-      setAlarmHour(data.alarmHour);
-      setAlarmMinute(data.alarmMinute);
+      const hour = Math.min(MAX_HOUR, Math.max(MIN_HOUR, data.alarmHour));
+      setAlarmHour(hour);
+      setAlarmMinute(hour >= MAX_HOUR ? 0 : data.alarmMinute);
       const lastRecord = [...data.records].reverse().find(r => r.eveningDone);
       const lastScore  = lastRecord?.score ?? 2;
       setGreeting(getMorningGreeting(lastScore));
@@ -174,15 +134,16 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
       Animated.timing(brushY, { toValue: 0, duration: 15000, useNativeDriver: true }),
     ])).start();
     requestNotificationPermission();
-  }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const n = new Date();
-      if (n.getHours() === alarmHour && n.getMinutes() === alarmMinute) triggerAlarm();
-    }, 10000);
-    return () => clearInterval(timer);
-  }, [alarmHour, alarmMinute]);
+    const sub = Notifications.addNotificationReceivedListener(() => {
+      if (!triggeredRef.current) {
+        triggeredRef.current = true;
+        triggerAlarm();
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
 
   async function requestNotificationPermission() {
     const { status } = await Notifications.requestPermissionsAsync();
@@ -191,10 +152,6 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 
   async function scheduleAlarmNotification() {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    const now = new Date();
-    const alarm = new Date();
-    alarm.setHours(alarmHour, alarmMinute, 0, 0);
-    if (alarm <= now) alarm.setDate(alarm.getDate() + 1);
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Awakening',
@@ -202,16 +159,17 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
         sound: true,
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: alarm,
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: alarmHour,
+        minute: alarmMinute,
       },
     });
   }
 
-  async function triggerAlarm() {
+  function triggerAlarm() {
     setPhase('ringing');
     startRipples();
-    loopAlarmSound();
+    playAlarmBell();
   }
 
   function startRipples() {
@@ -227,37 +185,14 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
     ripple(ring3, 1600);
   }
 
-  async function loopAlarmSound() {
-    try {
-      const b64  = generateWav(528, 2000, 0.9);
-      const path = FileSystem.cacheDirectory + 'alarm_tone.wav';
-      await FileSystem.writeAsStringAsync(path, b64, { encoding: 'base64' });
-      const { sound } = await Sound.createAsync({ uri: path }, { shouldPlay: true, volume: 1.0 });
-      soundRef.current = sound;
-      sound.setOnPlaybackStatusUpdate((s: any) => {
-        if (s.isLoaded && s.didJustFinish) sound.replayAsync();
-      });
-    } catch (e) {
-      console.log('alarm sound error:', e);
-    }
-  }
-
-  async function stopAlarm() {
-    if (soundRef.current) {
-      await soundRef.current.stopAsync();
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
-    }
-  }
-
   const slidePan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderMove: (_, g) => thumbX.setValue(Math.max(0, Math.min(MAX_X, g.dx))),
     onPanResponderRelease: (_, g) => {
       if (g.dx >= MAX_X * 0.65) {
         Animated.timing(thumbX, { toValue: MAX_X, duration: 180, useNativeDriver: false })
-          .start(async () => {
-            await stopAlarm();
+          .start(() => {
+            triggeredRef.current = false;
             onDismiss && onDismiss();
           });
       } else {
@@ -274,12 +209,11 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 
   const hh = String(alarmHour).padStart(2, '0');
   const mm = String(alarmMinute).padStart(2, '0');
+  const minuteLocked = alarmHour >= MAX_HOUR;
 
   return (
     <View style={s.root}>
       <StatusBar barStyle="dark-content" />
-
-      {/* 背景 */}
       <View style={s.mountain1} /><View style={s.mountain2} /><View style={s.mountain3} />
       {[0.38, 0.41, 0.44].map((pos, i) => (
         <View key={i} style={[s.waterLine, {
@@ -312,51 +246,81 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 
         {phase === 'set' ? (
           <>
-            {/* 山水插图 */}
             <MountainIcon />
             <View style={{ height: 16 }} />
-
-            {/* 时间选择器 */}
             <View style={s.timePickerRow}>
               <View style={s.pickerCol}>
-                <TouchableOpacity onPress={() => setAlarmHour(h => (h+1)%24)} style={s.arrowBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setAlarmHour(h => {
+                      const next = Math.min(MAX_HOUR, h + 1);
+                      if (next >= MAX_HOUR) setAlarmMinute(0);
+                      return next;
+                    });
+                    setConfirmed(false);
+                  }}
+                  style={[s.arrowBtn, alarmHour >= MAX_HOUR && s.arrowDisabled]}
+                >
                   <Text style={s.pickerArrow}>▲</Text>
                 </TouchableOpacity>
                 <Text style={s.pickerNum}>{hh}</Text>
-                <TouchableOpacity onPress={() => setAlarmHour(h => (h-1+24)%24)} style={s.arrowBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setAlarmHour(h => Math.max(MIN_HOUR, h - 1));
+                    setConfirmed(false);
+                  }}
+                  style={[s.arrowBtn, alarmHour <= MIN_HOUR && s.arrowDisabled]}
+                >
                   <Text style={s.pickerArrow}>▼</Text>
                 </TouchableOpacity>
               </View>
+
               <Text style={s.pickerColon}>:</Text>
+
               <View style={s.pickerCol}>
-                <TouchableOpacity onPress={() => setAlarmMinute(m => (m+5)%60)} style={s.arrowBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (minuteLocked) return;
+                    setAlarmMinute(m => (m + 5) % 60);
+                    setConfirmed(false);
+                  }}
+                  style={[s.arrowBtn, minuteLocked && s.arrowDisabled]}
+                >
                   <Text style={s.pickerArrow}>▲</Text>
                 </TouchableOpacity>
                 <Text style={s.pickerNum}>{mm}</Text>
-                <TouchableOpacity onPress={() => setAlarmMinute(m => (m-5+60)%60)} style={s.arrowBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (minuteLocked) return;
+                    setAlarmMinute(m => (m - 5 + 60) % 60);
+                    setConfirmed(false);
+                  }}
+                  style={[s.arrowBtn, minuteLocked && s.arrowDisabled]}
+                >
                   <Text style={s.pickerArrow}>▼</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
+            <Text style={s.rangeHint}>Mindful mornings  ·  4:00 — 10:00</Text>
             <View style={{ height: 8 }} />
             <Text style={s.mainWord}>Awakening</Text>
             <Text style={s.subWord}>{greeting || 'A new morning begins in stillness'}</Text>
             <View style={{ height: 40 }} />
-
             <TouchableOpacity style={s.btn} onPress={() => {
               scheduleAlarmNotification();
               saveAlarmTime(alarmHour, alarmMinute);
-              triggerAlarm();
+              setConfirmed(true);
             }}>
-              <Text style={s.btnText}>Set alarm  ›</Text>
+              <Text style={s.btnText}>{confirmed ? 'Alarm saved  ✓' : 'Confirm  ›'}</Text>
             </TouchableOpacity>
             <View style={{ height: 12 }} />
-            <Text style={s.hintText}>Alarm set for  {hh}:{mm}</Text>
+            <Text style={s.hintText}>
+              {confirmed ? `Waking at  ${hh}:${mm}  tomorrow` : `Tomorrow's alarm set for  ${hh}:${mm}`}
+            </Text>
           </>
         ) : (
           <>
-            {/* 响铃：呼吸球 */}
             <View style={s.stage}>
               <Animated.View style={[s.ripple, rippleStyle(ring1)]} />
               <Animated.View style={[s.ripple, rippleStyle(ring2)]} />
@@ -367,20 +331,16 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
                 </View>
               </Animated.View>
             </View>
-
             <View style={{ height: 20 }} />
             <Text style={s.timeDisplay}>{hh}:{mm}</Text>
             <Text style={s.mainWord}>Awakening</Text>
             <Text style={s.subWord}>{greeting || 'A new morning begins in stillness'}</Text>
             <View style={{ height: 48 }} />
-
-            {/* 水面滑动轨道 */}
             <View style={s.trackWrap}>
               <Animated.View style={[s.trackLabel, { opacity: labelOpac }]}>
                 <Text style={s.trackLabelText}>slide to wake  ›</Text>
               </Animated.View>
               <View style={s.track} {...slidePan.panHandlers}>
-                {/* 轨道内水波纹 */}
                 <Svg style={s.trackSvg} width={TRACK_W - THUMB} height={56} viewBox={`0 0 ${TRACK_W - THUMB} 56`}>
                   <Path
                     d={`M${THUMB} 22 Q${THUMB+30} 18 ${THUMB+60} 22 Q${THUMB+90} 26 ${THUMB+120} 22 Q${THUMB+150} 18 ${TRACK_W-THUMB} 22`}
@@ -392,7 +352,6 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
                     d={`M${THUMB} 38 Q${THUMB+30} 34 ${THUMB+60} 38 Q${THUMB+90} 42 ${THUMB+120} 38 Q${THUMB+150} 34 ${TRACK_W-THUMB} 38`}
                     fill="none" stroke={INK} strokeWidth={0.3} opacity={0.08}/>
                 </Svg>
-                {/* 莲花滑块 */}
                 <Animated.View style={[s.thumb, { transform: [{ translateX: thumbX }] }]}>
                   <ThumbLotus />
                 </Animated.View>
@@ -415,29 +374,26 @@ const s = StyleSheet.create({
   brushGroup: { position:'absolute', top:height*0.28, left:0, right:0, height:170 },
   cornerTL:   { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:'rgba(30,32,48,0.07)', top:-30, left:-30 },
   cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(30,32,48,0.06)', top:height*0.55, right:-15 },
-
-  content:   { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
-  dateStr:   { fontSize:25, color:INK3, letterSpacing:5, fontWeight:'300', marginBottom:16 },
-
-  timePickerRow: { flexDirection:'row', alignItems:'center', gap:16 },
-  pickerCol:     { alignItems:'center', gap:12, paddingHorizontal:16, paddingVertical:8 },
-  arrowBtn:      { padding:12 },
-  pickerArrow:   { fontSize:10, color:INK3, opacity:0.4 },
-  pickerNum:     { fontSize:64, color:INK, fontWeight:'200', letterSpacing:4 },
-  pickerColon:   { fontSize:48, color:INK2, fontWeight:'200', marginBottom:8 },
-
-  mainWord:  { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300', marginTop:8 },
-  subWord:   { fontSize:11, color:INK3, letterSpacing:3,  fontWeight:'300', marginTop:8, textAlign:'center' },
-  btn:       { borderWidth:1, borderColor:'rgba(30,32,48,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
-  btnText:   { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-  hintText:  { fontSize:11, color:INK3, letterSpacing:3, opacity:0.5 },
-
+  content:    { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
+  dateStr:    { fontSize:25, color:INK3, letterSpacing:5, fontWeight:'300', marginBottom:16 },
+  timePickerRow:  { flexDirection:'row', alignItems:'center', gap:16 },
+  pickerCol:      { alignItems:'center', gap:12, paddingHorizontal:16, paddingVertical:8 },
+  arrowBtn:       { padding:12 },
+  arrowDisabled:  { opacity: 0.15 },
+  pickerArrow:    { fontSize:10, color:INK3, opacity:0.4 },
+  pickerNum:      { fontSize:64, color:INK, fontWeight:'200', letterSpacing:4 },
+  pickerColon:    { fontSize:48, color:INK2, fontWeight:'200', marginBottom:8 },
+  rangeHint:  { fontSize:10, color:INK3, letterSpacing:2, opacity:0.35, marginTop:8 },
+  mainWord:   { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300', marginTop:8 },
+  subWord:    { fontSize:11, color:INK3, letterSpacing:3, fontWeight:'300', marginTop:8, textAlign:'center' },
+  btn:        { borderWidth:1, borderColor:'rgba(30,32,48,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
+  btnText:    { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
+  hintText:   { fontSize:11, color:INK3, letterSpacing:3, opacity:0.5 },
   stage:      { width:240, height:240, alignItems:'center', justifyContent:'center' },
   ripple:     { position:'absolute', width:200, height:200, borderRadius:100, borderWidth:1, borderColor:'#2a2e24' },
   clockOuter: { width:200, height:200, borderRadius:100, borderWidth:1, borderColor:'rgba(30,32,48,0.12)', backgroundColor:'rgba(220,216,206,0.6)', alignItems:'center', justifyContent:'center' },
   clockMid:   { width:155, height:155, borderRadius:78, borderWidth:0.5, borderColor:'rgba(30,32,48,0.08)', alignItems:'center', justifyContent:'center' },
   timeDisplay:{ fontSize:42, color:INK, fontWeight:'200', letterSpacing:6, marginTop:16 },
-
   trackWrap:      { width:TRACK_W, alignItems:'center', gap:12 },
   trackLabel:     { alignItems:'center' },
   trackLabelText: { fontSize:11, color:INK3, letterSpacing:4 },

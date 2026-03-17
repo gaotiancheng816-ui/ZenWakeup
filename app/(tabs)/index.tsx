@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import AlarmScreen from '../../screens/alarm';
+import AllSetScreen from '../../screens/allset';
+import DogenScreen from '../../screens/dogen';
 import EveningScreen from '../../screens/evening';
 import DaytimeScreen from '../../screens/hourly';
 import IntroMeditationScreen from '../../screens/intro-meditation';
@@ -13,9 +15,11 @@ import { getTrialStatus, loadData } from '../../utils/storage';
 
 type Page =
   | 'loading'
-  | 'onboarding'
+  | 'dogen'
   | 'zen-guide'
   | 'intro-meditation'
+  | 'onboarding'
+  | 'allset'
   | 'alarm'
   | 'meditation'
   | 'daytime'
@@ -30,17 +34,14 @@ export default function App() {
   useEffect(() => {
     loadData().then(async data => {
       if (!data.hasOnboarded) {
-        setPage('onboarding');
+        setPage('dogen');
         return;
       }
-
       const trial = await getTrialStatus();
-
       if (!trial.isPurchased && trial.trialExpired) {
         setPage('paywall');
         return;
       }
-
       setDaysLeft(trial.daysLeft);
       setPage('alarm');
     });
@@ -50,19 +51,27 @@ export default function App() {
 
   return (
     <View style={s.root}>
-      {page === 'onboarding'       && <OnboardingScreen       onDone={() => setPage('zen-guide')} />}
+      {page === 'dogen'            && <DogenScreen            onDone={() => setPage('zen-guide')} />}
       {page === 'zen-guide'        && <ZenGuideScreen         onReady={() => setPage('intro-meditation')} />}
-      {page === 'intro-meditation' && <IntroMeditationScreen  onDone={() => setPage('alarm')} />}
+      {page === 'intro-meditation' && <IntroMeditationScreen  onDone={() => setPage('onboarding')} />}
+      {page === 'onboarding'       && <OnboardingScreen       onDone={() => setPage('allset')} />}
+      {page === 'allset'           && <AllSetScreen           onDone={() => setPage('alarm')} />}
       {page === 'alarm'            && <AlarmScreen            onDismiss={() => setPage('meditation')} />}
       {page === 'meditation'       && <MeditationScreen       onDone={() => setPage('daytime')} />}
       {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
       {page === 'evening'          && <EveningScreen          onDone={() => setPage('summary')} />}
       {page === 'summary'          && <SummaryScreen />}
-      {page === 'paywall'          && <PaywallScreen trialExpired={true} daysLeft={daysLeft} />}
+      {page === 'paywall'          && (
+        <PaywallScreen
+          trialExpired={true}
+          daysLeft={daysLeft}
+          onPurchased={() => setPage('alarm')}
+        />
+      )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex:1 },
 });

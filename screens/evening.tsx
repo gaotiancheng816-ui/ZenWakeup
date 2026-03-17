@@ -10,7 +10,7 @@ import {
   View
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { playEveningTone } from '../utils/sounds';
+import { playEveningTone, playGuqinPluck, stopEveningTone } from '../utils/sounds';
 import { updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
@@ -83,7 +83,6 @@ const EnsoLarge = () => (
   </Svg>
 );
 
-// ── 卡片内装饰 SVG ────────────────────────────
 const CardDecoration = ({ cardWidth, cardHeight }: { cardWidth: number; cardHeight: number }) => {
   const cx = cardWidth / 2;
   const cy = cardHeight * 0.78;
@@ -95,18 +94,13 @@ const CardDecoration = ({ cardWidth, cardHeight }: { cardWidth: number; cardHeig
       viewBox={`0 0 ${cardWidth} ${cardHeight}`}
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
-      {/* 大禅圆底纹 */}
       <Path
         d={`M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - r * 0.38} ${cy + r * 0.92}`}
         fill="none" stroke={INK} strokeWidth={cardWidth * 0.025} strokeLinecap="round" opacity={0.04}/>
-
-      {/* 底部小涟漪 */}
       <Circle cx={cx} cy={cy + r * 0.55} r={r * 0.28} fill="none" stroke={INK} strokeWidth={0.5} opacity={0.07}/>
       <Circle cx={cx} cy={cy + r * 0.55} r={r * 0.18} fill="none" stroke={INK} strokeWidth={0.6} opacity={0.10}/>
       <Circle cx={cx} cy={cy + r * 0.55} r={r * 0.08} fill="none" stroke={INK} strokeWidth={0.7} opacity={0.14}/>
       <Circle cx={cx} cy={cy + r * 0.55} r={r * 0.024} fill={GOLD} opacity={0.38}/>
-
-      {/* 金色星点 */}
       <Circle cx={cardWidth * 0.78} cy={cardHeight * 0.18} r={2.2} fill={GOLD} opacity={0.28}/>
       <Circle cx={cardWidth * 0.84} cy={cardHeight * 0.12} r={1.4} fill={GOLD} opacity={0.18}/>
       <Circle cx={cardWidth * 0.72} cy={cardHeight * 0.13} r={1.0} fill={GOLD} opacity={0.15}/>
@@ -135,7 +129,10 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
   useEffect(() => { cardIdxRef.current = cardIdx; }, [cardIdx]);
 
   useEffect(() => {
-    playEveningTone();
+    // 古琴拨弦开场，2秒后背景音淡入
+    playGuqinPluck();
+    setTimeout(() => playEveningTone(), 2000);
+
     Animated.parallel([
       Animated.timing(fadeIn,    { toValue: 1, duration: 2000, useNativeDriver: true }),
       Animated.spring(moonScale, { toValue: 1, useNativeDriver: true, damping: 14 }),
@@ -156,6 +153,8 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
       Animated.timing(brushY, { toValue: 1, duration: 15000, useNativeDriver: true }),
       Animated.timing(brushY, { toValue: 0, duration: 15000, useNativeDriver: true }),
     ])).start();
+
+    return () => { stopEveningTone(); };
   }, []);
 
   const scorePan = useRef(PanResponder.create({
@@ -196,7 +195,6 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
   });
 
   const scoreX = scoreAnim.interpolate({ inputRange: [0, 4], outputRange: [0, width - 112] });
-
   const cardW = width - 64;
   const cardH = height * 0.44;
 
@@ -234,7 +232,6 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
     </>
   );
 
-  // ── 入场页 ──────────────────────────────────
   if (phase === 'enter') {
     return (
       <View style={s.root}>
@@ -265,7 +262,6 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
     );
   }
 
-  // ── 评分页 ──────────────────────────────────
   if (phase === 'score') {
     return (
       <View style={s.root}>
@@ -310,7 +306,6 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
     );
   }
 
-  // ── 反思卡片页 ──────────────────────────────
   if (phase === 'reflect') {
     const cardRotate = cardX.interpolate({
       inputRange: [-width, 0, width],
@@ -324,11 +319,9 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
           <View style={[s.progressBar, { width: `${(cardIdxRef.current / REFLECTIONS.length) * 100}%` as any }]} />
         </View>
         <View style={s.cardStage}>
-          {/* 背景卡片 */}
           {cardIdx + 1 < REFLECTIONS.length && (
             <View style={[s.card, s.cardBg]} />
           )}
-          {/* 主卡片 */}
           <Animated.View
             style={[s.card, {
               transform: [{ translateX: cardX }, { rotate: cardRotate }],
@@ -336,10 +329,7 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
             }]}
             {...cardPan.panHandlers}
           >
-            {/* 禅圆底纹装饰 */}
             <CardDecoration cardWidth={cardW} cardHeight={cardH} />
-
-            {/* 卡片内容 */}
             <Text style={s.cardNum}>{cardIdx + 1}  /  {REFLECTIONS.length}</Text>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20 }}>
               <Text style={s.cardMainWord}>{REFLECTIONS[cardIdx].label}</Text>
@@ -355,7 +345,6 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
     );
   }
 
-  // ── 完成页 ──────────────────────────────────
   return (
     <View style={s.root}>
       <StatusBar barStyle="dark-content" />
@@ -400,26 +389,21 @@ const s = StyleSheet.create({
   brushGroup: { position:'absolute', bottom:height*0.13, left:0, right:0, height:170 },
   cornerTL:   { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:'rgba(30,32,48,0.07)', top:-30, left:-30 },
   cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(30,32,48,0.06)', bottom:70, right:-15 },
-
   content:      { flex:1, alignItems:'center', paddingHorizontal:40, paddingTop:72 },
   pageLabel:    { fontSize:11, color:INK3, letterSpacing:8, fontWeight:'300' },
   pageLabelSub: { fontSize:11, color:INK3, letterSpacing:4, marginTop:4, opacity:0.7 },
   inkLine:      { width:40, height:1, backgroundColor:'rgba(42,46,36,0.25)' },
-
   mainWord: { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300' },
   subWord:  { fontSize:13, color:INK2, letterSpacing:3,  fontWeight:'300', marginTop:10, textAlign:'center', opacity:0.75 },
-
   moonRow:       { flexDirection:'row', gap:8, alignItems:'center' },
   moonBtn:       { width:52, height:52, alignItems:'center', justifyContent:'center', borderRadius:26, borderWidth:1, borderColor:'transparent' },
   moonBtnActive: { borderColor:'rgba(42,46,36,0.2)', backgroundColor:'rgba(42,46,36,0.04)' },
-
   sliderWrap:  { width:width-80, paddingVertical:20 },
   sliderTrack: { width:'100%', height:1, backgroundColor:'rgba(30,32,48,0.15)', justifyContent:'center' },
   sliderThumb: { width:36, height:36, borderRadius:18, backgroundColor:'rgba(220,216,206,0.95)', borderWidth:1, borderColor:'rgba(30,32,48,0.18)', alignItems:'center', justifyContent:'center', marginTop:-18 },
   thumbDot:    { width:8, height:8, borderRadius:4, backgroundColor:GOLD, opacity:0.75 },
   scoreLabel:  { fontSize:28, color:INK, letterSpacing:6, fontWeight:'200' },
   slideHint:   { fontSize:10, color:INK3, letterSpacing:2, opacity:0.4, fontStyle:'italic' },
-
   progressWrap: { width:'100%', height:1, backgroundColor:'rgba(30,32,48,0.08)', position:'absolute', top:0 },
   progressBar:  { height:1, backgroundColor:'rgba(30,32,48,0.25)' },
   cardStage:    { flex:1, width:'100%', alignItems:'center', justifyContent:'center' },
@@ -431,14 +415,12 @@ const s = StyleSheet.create({
   cardSub:      { fontSize:13, color:INK2, letterSpacing:1, textAlign:'center', lineHeight:20 },
   cardHint:     { fontSize:9, color:INK3, letterSpacing:2, opacity:0.35, textAlign:'right' },
   reflectNote:  { fontSize:11, color:INK2, letterSpacing:2, textAlign:'center' },
-
   hairline:       { width:32, height:1, backgroundColor:'rgba(42,46,36,0.15)', marginVertical:24 },
   quote:          { fontSize:12, color:INK2, letterSpacing:1, fontStyle:'italic', opacity:0.65, textAlign:'center', lineHeight:20 },
   summaryBox:     { width:'100%', borderWidth:1, borderColor:'rgba(30,32,48,0.1)', padding:24, gap:20 },
   summaryRow:     { flexDirection:'row', alignItems:'center', gap:16 },
   summaryText:    { fontSize:15, color:INK2, letterSpacing:3, fontWeight:'300' },
   summaryDivider: { height:1, backgroundColor:'rgba(30,32,48,0.08)' },
-
   btnWrap: { position:'absolute', bottom:height*0.26, left:40, right:40, alignItems:'center' },
   btn:     { borderWidth:1, borderColor:'rgba(30,32,48,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
   btnText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },

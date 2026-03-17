@@ -1,78 +1,111 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { setPurchased } from '../utils/storage';
 
 const { width } = Dimensions.get('window');
-
 const INK = '#2a2e24';
 const INK2 = '#485040';
 const INK3 = '#7a8472';
 const GOLD = '#8a7040';
 const BG = '#dedad2';
 
+const RC_API_KEY = 'test_qBUgscRmWdZaZmNXMzyWTQvOZXs';
+
 interface Props {
   daysLeft?: number;
   trialExpired?: boolean;
+  onPurchased: () => void;
 }
 
-export default function PaywallScreen({ daysLeft = 0, trialExpired = false }: Props) {
-  const router = useRouter();
+export default function PaywallScreen({ daysLeft = 0, trialExpired = false, onPurchased }: Props) {
   const [loading, setLoading] = useState(false);
+  const [price,   setPrice]   = useState('€ 2.99');
 
-  // 模拟购买（RevenueCat 接入前用这个）
-  async function handlePurchase() {
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 1500)); // 模拟网络请求
-    await setPurchased();
-    setLoading(false);
-    router.replace('/(tabs)');
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    Purchases.configure({ apiKey: RC_API_KEY });
+    fetchPrice();
+  }, []);
+
+  async function fetchPrice() {
+    try {
+      const offerings = await Purchases.getOfferings();
+      const lifetime = offerings.current?.availablePackages.find(
+        p => p.packageType === 'LIFETIME'
+      );
+      if (lifetime) {
+        setPrice(lifetime.product.priceString);
+      }
+    } catch (e) {
+      console.log('fetchPrice error:', e);
+    }
   }
 
-  // 恢复购买（RevenueCat 接入前用这个）
+  async function handlePurchase() {
+    setLoading(true);
+    try {
+      const offerings = await Purchases.getOfferings();
+      const lifetime = offerings.current?.availablePackages.find(
+        p => p.packageType === 'LIFETIME'
+      );
+      if (!lifetime) throw new Error('Product not found');
+      await Purchases.purchasePackage(lifetime);
+      await setPurchased();
+      onPurchased();
+    } catch (e: any) {
+      if (!e.userCancelled) {
+        Alert.alert('Purchase failed', 'Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleRestore() {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setLoading(false);
-    alert('No previous purchase found.');
+    try {
+      const info = await Purchases.restorePurchases();
+      const active = info.entitlements.active['zenwakeup_pro'];
+      if (active) {
+        await setPurchased();
+        onPurchased();
+      } else {
+        Alert.alert('No purchase found', 'No previous purchase found for this account.');
+      }
+    } catch (e) {
+      Alert.alert('Restore failed', 'Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <View style={styles.container}>
-      {/* 山形背景 SVG 可以后续加，先用纯色 */}
-
-      {/* 顶部标题 */}
       <View style={styles.top}>
+        <Text style={styles.zen}>
+          Seven days of quiet mornings.{'\n'}
+          If this stillness has meant something to you —
+        </Text>
+        <View style={{ height: 24 }} />
         <Text style={styles.title}>ZenWakeup</Text>
-        <Text style={styles.subtitle}>每一个清晨，都值得好好开始</Text>
       </View>
 
-      {/* 试用状态提示 */}
-      <View style={styles.statusBox}>
-        {trialExpired ? (
-          <Text style={styles.expiredText}>你的 7 天免费试用已结束</Text>
-        ) : (
-          <Text style={styles.trialText}>
-            免费试用剩余 <Text style={{ color: GOLD }}>{daysLeft} 天</Text>
-          </Text>
-        )}
-      </View>
-
-      {/* 功能列表 */}
       <View style={styles.features}>
         {[
-          '每日冥想引导',
-          '个性化禅意问候',
-          '山路成长系统（180天）',
-          '晚间 reflection & 月历',
-          '永久使用，买断一次',
+          'Daily meditation guidance',
+          'Personalized zen greetings',
+          'Mountain path growth system (180 days)',
+          'Evening reflection & moon calendar',
+          'Yours forever · one-time purchase',
         ].map((f, i) => (
           <View key={i} style={styles.featureRow}>
             <Text style={styles.featureDot}>·</Text>
@@ -81,13 +114,11 @@ export default function PaywallScreen({ daysLeft = 0, trialExpired = false }: Pr
         ))}
       </View>
 
-      {/* 价格 */}
       <View style={styles.priceBox}>
-        <Text style={styles.price}>€ 2.99</Text>
-        <Text style={styles.priceNote}>一次买断 · 永久使用</Text>
+        <Text style={styles.price}>{price}</Text>
+        <Text style={styles.priceNote}>One-time · Yours forever</Text>
       </View>
 
-      {/* 购买按钮 */}
       <TouchableOpacity
         style={styles.buyButton}
         onPress={handlePurchase}
@@ -96,18 +127,16 @@ export default function PaywallScreen({ daysLeft = 0, trialExpired = false }: Pr
         {loading ? (
           <ActivityIndicator color={BG} />
         ) : (
-          <Text style={styles.buyText}>立即解锁</Text>
+          <Text style={styles.buyText}>Support  ›</Text>
         )}
       </TouchableOpacity>
 
-      {/* 恢复购买 */}
       <TouchableOpacity onPress={handleRestore} disabled={loading}>
-        <Text style={styles.restoreText}>恢复购买</Text>
+        <Text style={styles.restoreText}>Restore purchase</Text>
       </TouchableOpacity>
 
-      {/* 底部说明 */}
       <Text style={styles.legalText}>
-        一次性付款，无订阅，无自动续费
+        One-time payment · No subscription · No auto-renewal
       </Text>
     </View>
   );
@@ -125,31 +154,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
+  zen: {
+    fontSize: 13,
+    color: INK2,
+    letterSpacing: 1.5,
+    fontWeight: '300',
+    lineHeight: 22,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    opacity: 0.7,
+  },
   title: {
     fontSize: 28,
     fontWeight: '200',
     color: INK,
     letterSpacing: 6,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: INK3,
-    marginTop: 8,
-    letterSpacing: 2,
-    fontWeight: '300',
-  },
-  statusBox: {
-    marginBottom: 24,
-  },
-  trialText: {
-    fontSize: 14,
-    color: INK2,
-    letterSpacing: 1,
-  },
-  expiredText: {
-    fontSize: 14,
-    color: GOLD,
-    letterSpacing: 1,
   },
   features: {
     width: '100%',

@@ -8,7 +8,7 @@ import {
   View
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { playBreathTone } from '../utils/sounds';
+import { playBreathIn, playBreathOut } from '../utils/sounds';
 import { updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
@@ -27,8 +27,6 @@ const DURATIONS = [
   { label: '15 min', seconds: 900 },
   { label: '20 min', seconds: 1200 },
 ];
-
-// ── Icons ──────────────────────────────────────────────────────
 
 const LotusIcon = ({ size = 90 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 90 90">
@@ -75,7 +73,6 @@ const EnsoLarge = () => (
   </Svg>
 );
 
-// ── Component ──────────────────────────────────────────────────
 export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
   const [screen,      setScreen]      = useState<'ready' | 'meditating' | 'done'>('ready');
   const [durationIdx, setDurationIdx] = useState(0);
@@ -130,7 +127,7 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
     if (screen !== 'meditating') return;
     const cycle = () => {
       setPhase('inhale');
-      playBreathTone('inhale');
+      playBreathIn();
       breathAnim.current = Animated.sequence([
         Animated.parallel([
           Animated.timing(orbScale, { toValue: 1.38, duration: 4000, useNativeDriver: true }),
@@ -144,7 +141,7 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
       breathAnim.current.start(({ finished }: { finished: boolean }) => {
         if (finished) {
           setPhase('exhale');
-          playBreathTone('exhale');
+          playBreathOut();
           setBreathCount(c => c + 1);
           cycle();
         }
@@ -238,25 +235,20 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
     </>
   );
 
-  // ── 准备页 ────────────────────────────────────────────────────
   if (screen === 'ready') {
     return (
       <View style={s.root}>
         <StatusBar barStyle="dark-content" />
         <Background />
         <Animated.View style={[s.content, { opacity: fadeIn }]}>
-
           <LotusIcon size={120} />
           <View style={{ height: 32 }} />
           <View style={s.inkLine} />
           <View style={{ height: 32 }} />
-
           <Text style={s.title}>Morning Meditation</Text>
           <View style={{ height: 12 }} />
           <Text style={s.readySub}>Take a moment to settle in.{'\n'}Choose your duration when ready.</Text>
-
           <View style={{ height: 40 }} />
-
           <View style={s.durationRow}>
             {DURATIONS.map((d, i) => (
               <TouchableOpacity
@@ -270,22 +262,17 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
               </TouchableOpacity>
             ))}
           </View>
-
           <View style={{ height: 48 }} />
-
           <TouchableOpacity style={s.btn} onPress={startMeditation}>
             <Text style={s.btnText}>Begin  ›</Text>
           </TouchableOpacity>
-
           <View style={{ height: 20 }} />
           <Text style={s.readyHint}>Find a comfortable position · close your eyes</Text>
-
         </Animated.View>
       </View>
     );
   }
 
-  // ── 完成页 ────────────────────────────────────────────────────
   if (screen === 'done') {
     return (
       <View style={s.root}>
@@ -308,22 +295,17 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
     );
   }
 
-  // ── 冥想页 ────────────────────────────────────────────────────
   return (
     <View style={s.root}>
       <StatusBar barStyle="dark-content" />
       <Background />
-
       <View style={s.progressWrap}>
         <View style={[s.progressBar, { width: `${((totalSeconds - seconds) / totalSeconds) * 100}%` as any }]} />
       </View>
-
       <Animated.View style={[s.content, { opacity: fadeIn }]}>
-
         <Text style={s.timerLabel}>{mm}:{ss}</Text>
         <Text style={s.breathLabel}>{breathCount} breaths</Text>
         <View style={{ height: 28 }} />
-
         <View style={s.stage}>
           <Animated.View style={[s.ripple, rippleStyle(ring1)]} />
           <Animated.View style={[s.ripple, rippleStyle(ring2)]} />
@@ -335,19 +317,16 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
             </View>
           </Animated.View>
         </View>
-
         <View style={{ height: 28 }} />
         <Text style={s.mainWord}>Breathing</Text>
         <Animated.View style={{ opacity: textFade, alignItems: 'center', marginTop: 10 }}>
           <Text style={s.subWord}>{GUIDANCE[stepIdx].sub}</Text>
         </Animated.View>
-
         <View style={s.stepDots}>
           {GUIDANCE.map((_, i) => (
             <View key={i} style={[s.stepDot, i === stepIdx && s.stepDotActive, i < stepIdx && s.stepDotDone]} />
           ))}
         </View>
-
         <View style={{ height: 36 }} />
         <TouchableOpacity onPress={() => {
           setScreen('done');
@@ -355,13 +334,11 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
         }}>
           <Text style={s.skip}>skip  ›</Text>
         </TouchableOpacity>
-
       </Animated.View>
     </View>
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────
 const s = StyleSheet.create({
   root:       { flex: 1, backgroundColor: BG },
   mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(42,46,36,0.045)', bottom:-width*0.95, left:-width*0.2 },
@@ -373,12 +350,9 @@ const s = StyleSheet.create({
   brushGroup: { position:'absolute', bottom:height*0.12, left:0, right:0, height:180 },
   cornerTL:   { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:'rgba(42,46,36,0.07)', top:-30, left:-30 },
   cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(42,46,36,0.06)', bottom:70, right:-15 },
-
   progressWrap: { position:'absolute', top:0, left:0, right:0, height:1, backgroundColor:'rgba(42,46,36,0.08)' },
   progressBar:  { height:1, backgroundColor:'rgba(42,46,36,0.3)' },
-
   content: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
-
   inkLine:             { width:40, height:1, backgroundColor:'rgba(42,46,36,0.25)' },
   title:               { fontSize:22, color:INK2, letterSpacing:4, fontWeight:'300', textAlign:'center' },
   readySub:            { fontSize:13, color:INK3, letterSpacing:1.5, textAlign:'center', lineHeight:24, opacity:0.7 },
@@ -388,21 +362,17 @@ const s = StyleSheet.create({
   durationBtnActive:   { borderColor:'rgba(42,46,36,0.55)', backgroundColor:'rgba(42,46,36,0.06)' },
   durationLabel:       { fontSize:12, color:INK3, letterSpacing:2, fontWeight:'300' },
   durationLabelActive: { color:INK2 },
-
   timerLabel:  { fontSize:13, color:INK2, letterSpacing:5, fontWeight:'300' },
   breathLabel: { fontSize:11, color:INK3, letterSpacing:3, marginTop:4, opacity:0.7 },
-
   stage:    { width:240, height:240, alignItems:'center', justifyContent:'center' },
   ripple:   { position:'absolute', width:180, height:180, borderRadius:90, borderWidth:1, borderColor:'#2a2e24' },
   orbOuter: { width:180, height:180, borderRadius:90, borderWidth:1, borderColor:'rgba(42,46,36,0.15)', backgroundColor:'rgba(234,230,220,0.6)', alignItems:'center', justifyContent:'center' },
   orbMid:   { width:140, height:140, borderRadius:70, borderWidth:0.5, borderColor:'rgba(42,46,36,0.09)', alignItems:'center', justifyContent:'center' },
-
   stepDots:      { flexDirection:'row', gap:8, marginTop:20 },
   stepDot:       { width:5, height:5, borderRadius:2.5, backgroundColor:'rgba(42,46,36,0.15)' },
   stepDotActive: { width:18, borderRadius:3, backgroundColor:GOLD },
   stepDotDone:   { backgroundColor:'rgba(138,112,64,0.4)' },
   skip:          { fontSize:11, color:INK3, letterSpacing:3, opacity:0.45 },
-
   mainWord: { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300' },
   subWord:  { fontSize:13, color:INK2, letterSpacing:3,  fontWeight:'300', textAlign:'center' },
   hairline: { width:32, height:1, backgroundColor:'rgba(42,46,36,0.15)', marginVertical:24 },
