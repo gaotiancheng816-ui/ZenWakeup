@@ -30,6 +30,9 @@ type Page =
 export default function App() {
   const [page, setPage] = useState<Page>('loading');
   const [daysLeft, setDaysLeft] = useState(7);
+  const [isFirstTime,  setIsFirstTime]  = useState(false);
+  const [alarmTimeStr, setAlarmTimeStr] = useState('06:00');
+  const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('first');
 
   useEffect(() => {
     loadData().then(async data => {
@@ -81,6 +84,3 @@ export default function App() {
 const s = StyleSheet.create({
   root: { flex:1 },
 });
-const [isFirstTime,  setIsFirstTime]  = useState(false);
-const [alarmTimeStr, setAlarmTimeStr] = useState('06:00');
-const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('first');
