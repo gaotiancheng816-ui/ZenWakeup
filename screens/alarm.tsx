@@ -16,7 +16,6 @@ import { playAlarmBell } from '../utils/sounds';
 import { loadData, saveAlarmTime } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
-
 const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
 
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -24,7 +23,6 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const TRACK_W = width - 80;
 const THUMB   = 52;
 const MAX_X   = TRACK_W - THUMB - 4;
-
 const MIN_HOUR = 4;
 const MAX_HOUR = 10;
 
@@ -39,7 +37,7 @@ Notifications.setNotificationHandler({
 
 function MountainIcon() {
   return (
-    <Svg width={240} height={140} viewBox="0 0 160 95">
+    <Svg width={width} height={width * 0.45} viewBox="0 0 160 95">
       <Path d="M10,90 L32,55 L54,90Z" fill="none" stroke={INK} strokeWidth={0.6} opacity={0.22}/>
       <Path d="M106,90 L128,60 L150,90Z" fill="none" stroke={INK} strokeWidth={0.6} opacity={0.20}/>
       <Path d="M38,90 L80,18 L122,90Z" fill={BG} stroke={INK} strokeWidth={1.2} strokeLinejoin="round" opacity={0.75}/>
@@ -92,10 +90,15 @@ function ThumbLotus() {
   );
 }
 
-export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }) {
+export default function ZenAlarmScreen({
+  onDismiss,
+  onConfirmed,
+}: {
+  onDismiss?: () => void;
+  onConfirmed?: () => void;
+}) {
   const [alarmHour,   setAlarmHour]   = useState(6);
   const [alarmMinute, setAlarmMinute] = useState(0);
-  const [date,        setDate]        = useState('');
   const [phase,       setPhase]       = useState<'set'|'ringing'>('set');
   const [greeting,    setGreeting]    = useState('');
   const [confirmed,   setConfirmed]   = useState(false);
@@ -111,8 +114,6 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
   const brushY   = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const d = new Date();
-    setDate(`${DAYS[d.getDay()]}  ${d.getDate()} ${MONTHS[d.getMonth()]}`);
     loadData().then(data => {
       const hour = Math.min(MAX_HOUR, Math.max(MIN_HOUR, data.alarmHour));
       setAlarmHour(hour);
@@ -141,7 +142,6 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
         triggerAlarm();
       }
     });
-
     return () => sub.remove();
   }, []);
 
@@ -222,32 +222,44 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
         }]} />
       ))}
       <Animated.View style={[s.mist1Layer, {
-        transform: [{ translateY: mist1Y.interpolate({ inputRange: [0, 1], outputRange: [0, -10] }) }]
+        transform: [{ translateY: mist1Y.interpolate({ inputRange:[0,1], outputRange:[0,-10] }) }]
       }]} />
       <Animated.View style={[s.brushGroup, {
-        transform: [{ translateY: brushY.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }]
+        transform: [{ translateY: brushY.interpolate({ inputRange:[0,1], outputRange:[0,-14] }) }]
       }]}>
         {[
-          { left: width*0.06, h: 90,  op: 0.05 }, { left: width*0.11, h: 140, op: 0.07 },
-          { left: width*0.16, h: 60,  op: 0.04 }, { left: width*0.80, h: 110, op: 0.06 },
-          { left: width*0.86, h: 75,  op: 0.08 }, { left: width*0.91, h: 95,  op: 0.05 },
+          { left:width*0.06, h:90,  op:0.05 }, { left:width*0.11, h:140, op:0.07 },
+          { left:width*0.16, h:60,  op:0.04 }, { left:width*0.80, h:110, op:0.06 },
+          { left:width*0.86, h:75,  op:0.08 }, { left:width*0.91, h:95,  op:0.05 },
         ].map((b, i) => (
           <View key={i} style={{
-            position: 'absolute', left: b.left, bottom: 0,
-            width: 1.5, height: b.h, backgroundColor: '#1e2030',
-            opacity: b.op, borderRadius: 1,
+            position:'absolute', left:b.left, bottom:0,
+            width:1.5, height:b.h, backgroundColor:'#1e2030',
+            opacity:b.op, borderRadius:1,
           }} />
         ))}
       </Animated.View>
       <View style={s.cornerTL} /><View style={s.cornerBR} />
 
       <Animated.View style={[s.content, { opacity: fadeIn }]}>
-        <Text style={s.dateStr}>{date}</Text>
 
         {phase === 'set' ? (
           <>
             <MountainIcon />
+            <View style={{ height: 8 }} />
+
+            <View style={s.titleZone}>
+              <Text style={s.mainWord}>Awakening</Text>
+              <View style={s.hairline} />
+              <Text style={s.subWord}>{greeting || 'A new morning begins in stillness'}</Text>
+              <View style={{ height: 8 }} />
+              <Text style={s.guideText}>
+                Set the time for tomorrow's{'\n'}first morning meditation.
+              </Text>
+            </View>
+
             <View style={{ height: 16 }} />
+
             <View style={s.timePickerRow}>
               <View style={s.pickerCol}>
                 <TouchableOpacity
@@ -274,9 +286,7 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
                   <Text style={s.pickerArrow}>▼</Text>
                 </TouchableOpacity>
               </View>
-
               <Text style={s.pickerColon}>:</Text>
-
               <View style={s.pickerCol}>
                 <TouchableOpacity
                   onPress={() => {
@@ -303,18 +313,17 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
             </View>
 
             <Text style={s.rangeHint}>Mindful mornings  ·  4:00 — 10:00</Text>
-            <View style={{ height: 8 }} />
-            <Text style={s.mainWord}>Awakening</Text>
-            <Text style={s.subWord}>{greeting || 'A new morning begins in stillness'}</Text>
-            <View style={{ height: 40 }} />
+            <View style={{ height: 20 }} />
+
             <TouchableOpacity style={s.btn} onPress={() => {
               scheduleAlarmNotification();
               saveAlarmTime(alarmHour, alarmMinute);
               setConfirmed(true);
+              if (onConfirmed) setTimeout(() => onConfirmed(), 1200);
             }}>
               <Text style={s.btnText}>{confirmed ? 'Alarm saved  ✓' : 'Confirm  ›'}</Text>
             </TouchableOpacity>
-            <View style={{ height: 12 }} />
+            <View style={{ height: 8 }} />
             <Text style={s.hintText}>
               {confirmed ? `Waking at  ${hh}:${mm}  tomorrow` : `Tomorrow's alarm set for  ${hh}:${mm}`}
             </Text>
@@ -365,7 +374,7 @@ export default function ZenAlarmScreen({ onDismiss }: { onDismiss?: () => void }
 }
 
 const s = StyleSheet.create({
-  root:       { flex: 1, backgroundColor: BG },
+  root:       { flex:1, backgroundColor:BG },
   mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.045)', top:height*0.45, left:-width*0.2 },
   mountain2:  { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:'rgba(30,32,48,0.035)', top:height*0.48, left:width*0.1 },
   mountain3:  { position:'absolute', width:width*0.8, height:width*0.8, borderRadius:width*0.4,  backgroundColor:'rgba(30,32,48,0.03)',  top:height*0.50, right:-width*0.05 },
@@ -374,26 +383,34 @@ const s = StyleSheet.create({
   brushGroup: { position:'absolute', top:height*0.28, left:0, right:0, height:170 },
   cornerTL:   { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:'rgba(30,32,48,0.07)', top:-30, left:-30 },
   cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(30,32,48,0.06)', top:height*0.55, right:-15 },
-  content:    { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
-  dateStr:    { fontSize:25, color:INK3, letterSpacing:5, fontWeight:'300', marginBottom:16 },
-  timePickerRow:  { flexDirection:'row', alignItems:'center', gap:16 },
-  pickerCol:      { alignItems:'center', gap:12, paddingHorizontal:16, paddingVertical:8 },
-  arrowBtn:       { padding:12 },
-  arrowDisabled:  { opacity: 0.15 },
-  pickerArrow:    { fontSize:10, color:INK3, opacity:0.4 },
-  pickerNum:      { fontSize:64, color:INK, fontWeight:'200', letterSpacing:4 },
-  pickerColon:    { fontSize:48, color:INK2, fontWeight:'200', marginBottom:8 },
-  rangeHint:  { fontSize:10, color:INK3, letterSpacing:2, opacity:0.35, marginTop:8 },
-  mainWord:   { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300', marginTop:8 },
-  subWord:    { fontSize:11, color:INK3, letterSpacing:3, fontWeight:'300', marginTop:8, textAlign:'center' },
-  btn:        { borderWidth:1, borderColor:'rgba(30,32,48,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
-  btnText:    { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-  hintText:   { fontSize:11, color:INK3, letterSpacing:3, opacity:0.5 },
+
+  content:   { flex:1, alignItems:'center', justifyContent:'center', paddingBottom:24 },
+
+  titleZone: { alignItems:'center', gap:8, paddingHorizontal:40 },
+  mainWord:  { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300' },
+  hairline:  { width:32, height:1, backgroundColor:'rgba(42,46,36,0.22)' },
+  subWord:   { fontSize:11, color:INK3, letterSpacing:3, fontWeight:'300', textAlign:'center', opacity:0.7 },
+  guideText: { fontSize:12, color:INK3, letterSpacing:1.5, fontWeight:'300', textAlign:'center', lineHeight:20, opacity:0.6 },
+
+  timePickerRow: { flexDirection:'row', alignItems:'center', gap:16 },
+  pickerCol:     { alignItems:'center', gap:12, paddingHorizontal:16, paddingVertical:8 },
+  arrowBtn:      { padding:12 },
+  arrowDisabled: { opacity:0.15 },
+  pickerArrow:   { fontSize:10, color:INK3, opacity:0.4 },
+  pickerNum:     { fontSize:64, color:INK, fontWeight:'200', letterSpacing:4 },
+  pickerColon:   { fontSize:48, color:INK2, fontWeight:'200', marginBottom:8 },
+  rangeHint:     { fontSize:10, color:INK3, letterSpacing:2, opacity:0.35, marginTop:4 },
+
+  btn:      { borderWidth:1, borderColor:'rgba(30,32,48,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
+  btnText:  { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
+  hintText: { fontSize:11, color:INK3, letterSpacing:3, opacity:0.5 },
+
   stage:      { width:240, height:240, alignItems:'center', justifyContent:'center' },
   ripple:     { position:'absolute', width:200, height:200, borderRadius:100, borderWidth:1, borderColor:'#2a2e24' },
   clockOuter: { width:200, height:200, borderRadius:100, borderWidth:1, borderColor:'rgba(30,32,48,0.12)', backgroundColor:'rgba(220,216,206,0.6)', alignItems:'center', justifyContent:'center' },
   clockMid:   { width:155, height:155, borderRadius:78, borderWidth:0.5, borderColor:'rgba(30,32,48,0.08)', alignItems:'center', justifyContent:'center' },
   timeDisplay:{ fontSize:42, color:INK, fontWeight:'200', letterSpacing:6, marginTop:16 },
+
   trackWrap:      { width:TRACK_W, alignItems:'center', gap:12 },
   trackLabel:     { alignItems:'center' },
   trackLabelText: { fontSize:11, color:INK3, letterSpacing:4 },

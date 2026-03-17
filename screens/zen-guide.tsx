@@ -125,7 +125,7 @@ export default function ZenGuideScreen({ onReady }: { onReady: () => void }) {
         <View style={{ height: 56 }} />
 
         <TouchableOpacity style={s.btn} onPress={onReady}>
-          <Text style={s.btnText}>I understand  ›</Text>
+          <Text style={s.btnText}>Next  ›</Text>
         </TouchableOpacity>
 
       </Animated.View>

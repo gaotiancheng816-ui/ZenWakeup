@@ -70,7 +70,7 @@ const SLIDES = [
   },
   {
     title: "Dogen's world was quieter than ours.",
-    sub: 'Yet he still chose stillness —\nevery single morning.\n\nEight centuries later,\nthe morning is still here.\nSo is the breath.',
+    sub: 'Yet he still chose stillness —\nevery single morning.\n\nEight centuries later,\nthat same stillness is yours to find.',
     btn: 'Step onto the path  ›',
     isFinal: true,
   },

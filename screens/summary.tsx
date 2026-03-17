@@ -309,7 +309,7 @@ const mp = StyleSheet.create({
 });
 
 // ── 主组件 ────────────────────────────────────
-export default function DailySummaryScreen() {
+export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) {
   const [appData,    setAppData]    = useState<AppData | null>(null);
   const [todayRec,   setTodayRec]   = useState<DayRecord | null>(null);
   const [alarmSaved, setAlarmSaved] = useState(false);
@@ -515,7 +515,14 @@ export default function DailySummaryScreen() {
 
         {alarmSaved && <Text style={s.savedHint}>Alarm saved  ✓</Text>}
 
+        <View style={{ height:40 }}/>
+        {onDone && (
+          <TouchableOpacity style={s.doneBtn} onPress={onDone}>
+            <Text style={s.doneBtnText}>Rest well tonight  ›</Text>
+          </TouchableOpacity>
+        )}
         <View style={{ height:80 }}/>
+        
       </Animated.View>
     </ScrollView>
   );
@@ -575,5 +582,7 @@ const s = StyleSheet.create({
   alarmColon:   { fontSize:48, color:INK2, fontWeight:'200', marginBottom:4 },
   saveAlarmBtn: { marginTop:24, borderWidth:1, borderColor:'rgba(42,46,36,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
   saveAlarmText:{ fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-  savedHint:    { fontSize:11, color:GOLD, letterSpacing:3, marginTop:12 },
+  savedHint:   { fontSize:11, color:GOLD, letterSpacing:3, marginTop:12 },
+  doneBtn:     { marginTop:16, borderWidth:1, borderColor:'rgba(42,46,36,0.38)', backgroundColor:'rgba(42,46,36,0.05)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
+  doneBtnText: { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'300' },
 });

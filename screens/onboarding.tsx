@@ -73,17 +73,7 @@ const SLIDES = [
   {
     icon: <MountainPathIcon />,
     title: 'The Mountain Path',
-    sub: '180 days of quiet mornings.\nEach complete day unlocks\na new element on your path.\n\nA pine tree. A stream.\nA crescent moon.',
-  },
-  {
-    icon: <EveningIcon />,
-    title: 'Evening Reflection',
-    sub: 'Three quiet questions at day\'s end.\n\nWhat did you bring today?\nWhat are you grateful for?\nWhat will you release tonight?',
-  },
-  {
-    icon: <PracticeIcon />,
-    title: 'Your practice, simply.',
-    sub: 'Morning. Daytime. Evening.\n\nThree small rituals.\nOne quiet life.\nThat is enough.',
+    sub: '180 days of quiet mornings.\nEach complete day unlocks\na new element on your path.',
   },
 ];
 
@@ -199,15 +189,8 @@ export default function OnboardingScreen({ onDone }: Props) {
         <View style={{ height:48 }} />
         <TouchableOpacity style={s.nextBtn} onPress={goNext}>
           <Text style={s.nextBtnText}>
-            {slideIdx === SLIDES.length - 1 ? 'Begin  ›' : 'Next  ›'}
+            {slideIdx === SLIDES.length - 1 ? 'Set Morning Alarm  ›' : 'Next  ›'}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={s.skipBtn} onPress={async () => {
-          playGuqinPluck();
-          await completeOnboarding(6, 0, 5);
-          setTimeout(() => onDone(), 800);
-        }}>
-          <Text style={s.skipText}>skip intro</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -234,6 +217,4 @@ const s = StyleSheet.create({
   sub:         { fontSize:12, color:INK2, letterSpacing:1.5, fontWeight:'300', textAlign:'center', lineHeight:22, opacity:0.75 },
   nextBtn:     { borderWidth:1, borderColor:'rgba(42,46,36,0.25)', paddingHorizontal:36, paddingVertical:14, borderRadius:2 },
   nextBtnText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-  skipBtn:     { marginTop:20, padding:8 },
-  skipText:    { fontSize:11, color:INK3, letterSpacing:3, opacity:0.45 },
 });

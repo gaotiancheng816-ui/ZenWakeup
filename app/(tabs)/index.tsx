@@ -51,11 +51,17 @@ export default function App() {
 
   return (
     <View style={s.root}>
-      {page === 'dogen'            && <DogenScreen            onDone={() => setPage('zen-guide')} />}
-      {page === 'zen-guide'        && <ZenGuideScreen         onReady={() => setPage('intro-meditation')} />}
-      {page === 'intro-meditation' && <IntroMeditationScreen  onDone={() => setPage('onboarding')} />}
-      {page === 'onboarding'       && <OnboardingScreen       onDone={() => setPage('allset')} />}
-      {page === 'allset'           && <AllSetScreen           onDone={() => setPage('alarm')} />}
+      {page === 'dogen'            && <DogenScreen            onDone={() => setPage('intro-meditation')} />}
+      {page === 'intro-meditation' && <IntroMeditationScreen  onDone={() => setPage('zen-guide')} />}
+      {page === 'zen-guide'        && <ZenGuideScreen         onReady={() => setPage('onboarding')} />}
+      {page === 'onboarding'       && <OnboardingScreen       onDone={() => setPage('alarm')} />}
+      {page === 'allset' && (
+        <AllSetScreen
+          mode={allsetMode}
+          alarmTime={alarmTimeStr}
+          onDone={() => {}}
+        />
+      )}
       {page === 'alarm'            && <AlarmScreen            onDismiss={() => setPage('meditation')} />}
       {page === 'meditation'       && <MeditationScreen       onDone={() => setPage('daytime')} />}
       {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
@@ -75,3 +81,6 @@ export default function App() {
 const s = StyleSheet.create({
   root: { flex:1 },
 });
+const [isFirstTime,  setIsFirstTime]  = useState(false);
+const [alarmTimeStr, setAlarmTimeStr] = useState('06:00');
+const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('first');

@@ -36,7 +36,7 @@ const PHASES = [
   { phase: 'rest',   duration:  500 },
 ];
 
-const TOTAL_SECONDS = 5 * 60;
+const TOTAL_SECONDS = 3 * 60;
 
 const Background = ({ mist1, brushY }: { mist1: Animated.Value, brushY: Animated.Value }) => (
   <>
@@ -152,7 +152,7 @@ export default function IntroMeditationScreen({ onDone }: Props) {
           <View style={{ height:32 }} />
           <View style={s.inkLine} />
           <View style={{ height:32 }} />
-          <Text style={s.readyTitle}>Your first breath.</Text>
+          <Text style={s.readyTitle}>Your First Practice.</Text>
           <View style={{ height:16 }} />
           <Text style={s.readySub}>
             {'Find a quiet spot.\nSit however feels natural.\nClose your eyes.\n\n3 minutes. Just follow the circle.'}
