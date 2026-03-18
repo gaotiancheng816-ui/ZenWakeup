@@ -4,6 +4,7 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  Platform,
   StatusBar,
   StyleSheet,
   Text,
@@ -103,7 +104,9 @@ export default function ZenAlarmScreen({
   const [greeting,    setGreeting]    = useState('');
   const [confirmed,   setConfirmed]   = useState(false);
 
-  const triggeredRef = useRef(false);
+  const triggeredRef  = useRef(false);
+  const ringingRef    = useRef(false);
+  const alarmLoopRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeIn   = useRef(new Animated.Value(0)).current;
   const orbScale = useRef(new Animated.Value(0.96)).current;
   const thumbX   = useRef(new Animated.Value(0)).current;
@@ -134,15 +137,38 @@ export default function ZenAlarmScreen({
       Animated.timing(brushY, { toValue: 1, duration: 15000, useNativeDriver: true }),
       Animated.timing(brushY, { toValue: 0, duration: 15000, useNativeDriver: true }),
     ])).start();
-    requestNotificationPermission();
+    if (Platform.OS !== 'web') {
+      requestNotificationPermission();
 
-    const sub = Notifications.addNotificationReceivedListener(() => {
-      if (!triggeredRef.current) {
-        triggeredRef.current = true;
-        triggerAlarm();
-      }
-    });
-    return () => sub.remove();
+      // app 在前台时收到通知
+      const sub = Notifications.addNotificationReceivedListener(() => {
+        if (!triggeredRef.current) {
+          triggeredRef.current = true;
+          triggerAlarm();
+        }
+      });
+
+      // app 在后台时用户点击通知横幅唤醒
+      const subResponse = Notifications.addNotificationResponseReceivedListener(() => {
+        if (!triggeredRef.current) {
+          triggeredRef.current = true;
+          triggerAlarm();
+        }
+      });
+
+      // app 从通知冷启动时检查是否有未处理的通知
+      Notifications.getLastNotificationResponseAsync().then(response => {
+        if (response && !triggeredRef.current) {
+          triggeredRef.current = true;
+          triggerAlarm();
+        }
+      });
+
+      return () => {
+        sub.remove();
+        subResponse.remove();
+      };
+    }
   }, []);
 
   async function requestNotificationPermission() {
@@ -151,12 +177,13 @@ export default function ZenAlarmScreen({
   }
 
   async function scheduleAlarmNotification() {
+    if (Platform.OS === 'web') return;
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Awakening',
         body: 'Time to begin your morning meditation',
-        sound: true,
+        sound: 'alarm_bell.wav',
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -169,7 +196,24 @@ export default function ZenAlarmScreen({
   function triggerAlarm() {
     setPhase('ringing');
     startRipples();
-    playAlarmBell();
+    ringingRef.current = true;
+    loopAlarmBell();
+  }
+
+  async function loopAlarmBell() {
+    if (!ringingRef.current) return;
+    await playAlarmBell();
+    alarmLoopRef.current = setTimeout(() => {
+      if (ringingRef.current) loopAlarmBell();
+    }, 1500);
+  }
+
+  function stopAlarmBell() {
+    ringingRef.current = false;
+    if (alarmLoopRef.current) {
+      clearTimeout(alarmLoopRef.current);
+      alarmLoopRef.current = null;
+    }
   }
 
   function startRipples() {
@@ -193,6 +237,7 @@ export default function ZenAlarmScreen({
         Animated.timing(thumbX, { toValue: MAX_X, duration: 180, useNativeDriver: false })
           .start(() => {
             triggeredRef.current = false;
+            stopAlarmBell();
             onDismiss && onDismiss();
           });
       } else {

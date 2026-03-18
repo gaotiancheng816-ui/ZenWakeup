@@ -99,12 +99,10 @@ export async function saveAlarmTime(hour: number, minute: number): Promise<void>
 }
 
 export async function completeOnboarding(
-  hour: number, minute: number, minutes: number
+  minutes: number
 ): Promise<void> {
   const data = await loadData();
   data.hasOnboarded = true;
-  data.alarmHour = hour;
-  data.alarmMinute = minute;
   data.meditationMinutes = minutes;
   await saveData(data);
 }

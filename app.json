@@ -37,6 +37,12 @@
           "backgroundColor": "#dedad2"
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/sounds/alarm_bell.wav"]
+        }
+      ],
       "expo-audio",
       "expo-asset"
     ],

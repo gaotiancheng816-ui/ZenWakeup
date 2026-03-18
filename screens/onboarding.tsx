@@ -126,7 +126,7 @@ export default function OnboardingScreen({ onDone }: Props) {
       });
     } else {
       playGuqinPluck();
-      await completeOnboarding(6, 0, 5);
+      await completeOnboarding(5);
       setTimeout(() => onDone(), 800);
     }
   }

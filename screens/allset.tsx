@@ -4,6 +4,7 @@ import {
   Dimensions,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -81,6 +82,10 @@ export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
         <Text style={s.sub}>{sub}</Text>
         <View style={{ height:32 }} />
         <Text style={s.hint}>see you tomorrow at {alarmTime}</Text>
+        <View style={{ height: 40 }} />
+        <TouchableOpacity style={s.doneBtn} onPress={onDone}>
+          <Text style={s.doneBtnText}>Done  ›</Text>
+        </TouchableOpacity>
       </Animated.View>
     </View>
   );
@@ -99,4 +104,6 @@ const s = StyleSheet.create({
   title:     { fontSize:28, color:INK2, letterSpacing:8, fontWeight:'300', textAlign:'center' },
   sub:       { fontSize:13, color:INK2, letterSpacing:2, fontWeight:'300', textAlign:'center', lineHeight:26, opacity:0.65 },
   hint:      { fontSize:10, color:INK3, letterSpacing:3, opacity:0.35 },
+  doneBtn:   { borderWidth:1, borderColor:'rgba(42,46,36,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
+  doneBtnText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
 });

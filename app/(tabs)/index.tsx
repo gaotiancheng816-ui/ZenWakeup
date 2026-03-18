@@ -35,6 +35,11 @@ export default function App() {
   const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('first');
 
   useEffect(() => {
+    // DEV: URL 参数跳页 (?dev=meditation)
+    if (typeof window !== 'undefined') {
+      const devPage = new URLSearchParams(window.location.search).get('dev') as Page | null;
+      if (devPage) { setPage(devPage); return; }
+    }
     loadData().then(async data => {
       if (!data.hasOnboarded) {
         setPage('dogen');
@@ -62,14 +67,27 @@ export default function App() {
         <AllSetScreen
           mode={allsetMode}
           alarmTime={alarmTimeStr}
-          onDone={() => {}}
+          onDone={() => setPage('alarm')}
         />
       )}
-      {page === 'alarm'            && <AlarmScreen            onDismiss={() => setPage('meditation')} />}
+      {page === 'alarm' && (
+        <AlarmScreen
+          onDismiss={() => setPage('meditation')}
+          onConfirmed={() => {
+            loadData().then(data => {
+              const hh = String(data.alarmHour).padStart(2, '0');
+              const mm = String(data.alarmMinute).padStart(2, '0');
+              setAlarmTimeStr(`${hh}:${mm}`);
+              setAllsetMode('daily');
+              setPage('allset');
+            });
+          }}
+        />
+      )}
       {page === 'meditation'       && <MeditationScreen       onDone={() => setPage('daytime')} />}
       {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
       {page === 'evening'          && <EveningScreen          onDone={() => setPage('summary')} />}
-      {page === 'summary'          && <SummaryScreen />}
+      {page === 'summary'          && <SummaryScreen onDone={() => setPage('alarm')} />}
       {page === 'paywall'          && (
         <PaywallScreen
           trialExpired={true}
