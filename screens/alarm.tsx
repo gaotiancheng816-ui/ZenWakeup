@@ -14,7 +14,7 @@ import {
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { getMorningGreeting } from '../utils/greetings';
 import { playAlarmBell } from '../utils/sounds';
-import { loadData, saveAlarmTime } from '../utils/storage';
+import { getTodayRecord, loadData, saveAlarmTime, updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
 const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
@@ -124,6 +124,9 @@ export default function ZenAlarmScreen({
       const lastRecord = [...data.records].reverse().find(r => r.eveningDone);
       const lastScore  = lastRecord?.score ?? 2;
       setGreeting(getMorningGreeting(lastScore));
+      // 今天已经唤醒过了 → 屏蔽所有通知触发，避免重新进入闹铃响铃界面
+      const today = getTodayRecord(data);
+      if (today.morningDone) triggeredRef.current = true;
     });
     Animated.parallel([
       Animated.timing(fadeIn,   { toValue: 1, duration: 2000, useNativeDriver: true }),
@@ -236,8 +239,9 @@ export default function ZenAlarmScreen({
       if (g.dx >= MAX_X * 0.65) {
         Animated.timing(thumbX, { toValue: MAX_X, duration: 180, useNativeDriver: false })
           .start(() => {
-            triggeredRef.current = false;
+            // 保持 triggeredRef.current = true，防止组件重挂后再次触发铃声
             stopAlarmBell();
+            updateTodayRecord({ morningDone: true }); // 记录今日已唤醒
             onDismiss && onDismiss();
           });
       } else {

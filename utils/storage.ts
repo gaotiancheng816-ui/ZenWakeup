@@ -140,6 +140,23 @@ export async function getTrialStatus(): Promise<{
   };
 }
 
+const PAGE_KEY = 'zenwakeup_page';
+const RESTORABLE = ['meditation', 'daytime', 'evening', 'summary'];
+
+export async function saveCurrentPage(page: string): Promise<void> {
+  try {
+    if (RESTORABLE.includes(page)) {
+      await AsyncStorage.setItem(PAGE_KEY, page);
+    } else {
+      await AsyncStorage.removeItem(PAGE_KEY);
+    }
+  } catch {}
+}
+
+export async function loadCurrentPage(): Promise<string | null> {
+  try { return await AsyncStorage.getItem(PAGE_KEY); } catch { return null; }
+}
+
 // 标记为已购买（RevenueCat 接入后调用这个）
 export async function setPurchased(): Promise<void> {
   const data = await loadData();

@@ -11,7 +11,7 @@ import OnboardingScreen from '../../screens/onboarding';
 import PaywallScreen from '../../screens/paywall';
 import SummaryScreen from '../../screens/summary';
 import ZenGuideScreen from '../../screens/zen-guide';
-import { getTrialStatus, loadData } from '../../utils/storage';
+import { getTrialStatus, loadCurrentPage, loadData, saveCurrentPage } from '../../utils/storage';
 
 type Page =
   | 'loading'
@@ -51,9 +51,14 @@ export default function App() {
         return;
       }
       setDaysLeft(trial.daysLeft);
-      setPage('alarm');
+      // 恢复上次页面（meditation/daytime/evening/summary），避免 Focus 模式返回后丢失进度
+      const saved = await loadCurrentPage();
+      setPage((saved as Page) ?? 'alarm');
     });
   }, []);
+
+  // 页面变化时持久化，方便从 Focus 等模式返回后恢复
+  useEffect(() => { saveCurrentPage(page); }, [page]);
 
   if (page === 'loading') return <View style={s.root} />;
 

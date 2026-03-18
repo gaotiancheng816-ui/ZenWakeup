@@ -31,7 +31,7 @@ export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
     // 不自动跳转，停留等待
   }, []);
 
-  const title = mode === 'first' ? 'All set.' : 'Well done.';
+  const title = mode === 'first' ? 'All Set.' : 'Well Done.';
   const sub   = mode === 'first'
     ? `Your first morning begins\ntomorrow at ${alarmTime}.\n\nRest well tonight.`
     : `Tomorrow's morning begins\nat ${alarmTime}.\n\nRest well tonight.`;
@@ -84,7 +84,7 @@ export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
         <Text style={s.hint}>see you tomorrow at {alarmTime}</Text>
         <View style={{ height: 40 }} />
         <TouchableOpacity style={s.doneBtn} onPress={onDone}>
-          <Text style={s.doneBtnText}>Done  ›</Text>
+          <Text style={s.doneBtnText}>Back to alarm  ›</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
