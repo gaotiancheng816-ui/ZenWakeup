@@ -442,7 +442,7 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
             </View>
           </View>
           <View style={{ height: 24 }} />
-          <Text style={s.quote}>The way of heaven benefits and does not harm</Text>
+          <Text style={s.quote}>When you bow deeply to the universe, it bows back</Text>
         </View>
         <TouchableOpacity style={s.btn} onPress={() => onDone && onDone()}>
           <Text style={s.btnText}>View today's summary  ›</Text>
