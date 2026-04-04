@@ -16,13 +16,13 @@ const SCORE_EN = ['Heavy','Tired','Neutral','Light','Fulfilled'];
 const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS     = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const QUOTES   = [
-  'In pursuit of Tao, every day something is dropped',
-  'The highest good is like water',
-  'Attain the utmost emptiness · hold fast to stillness',
-  'Those who know enough are rich',
-  'Yield and overcome',
-  'True words are not beautiful · beautiful words are not true',
-  'He who overcomes himself is strong',
+  'Before enlightenment, chop wood, carry water',
+  'Sit quietly · doing nothing · spring comes',
+  'The quieter you become · the more you can hear',
+  'When you realize nothing is lacking · the whole world belongs to you',
+  'Wherever you are is called here',
+  'Walk as if you are kissing the earth with your feet',
+  'The present moment is the only moment available to us',
 ];
 
 // ── 月相 SVG ──────────────────────────────────
