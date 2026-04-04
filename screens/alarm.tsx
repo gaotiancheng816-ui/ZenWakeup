@@ -264,7 +264,9 @@ export default function ZenAlarmScreen({
   }, []);
 
   async function requestNotificationPermission() {
-    const { status } = await Notifications.requestPermissionsAsync();
+    const { status } = await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: true, allowSound: true },
+    });
     if (status !== 'granted') console.log('Notification permission denied');
   }
 
@@ -281,6 +283,10 @@ export default function ZenAlarmScreen({
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: alarmHour,
         minute: alarmMinute,
+        // Links to the MAX-importance Android channel created in _layout.tsx.
+        // On Android 8+, the channel controls sound/vibration; this ensures
+        // the alarm fires at full volume even when the app is killed.
+        ...(Platform.OS === 'android' ? { channelId: 'zen-alarm' } : {}),
       },
     });
   }
