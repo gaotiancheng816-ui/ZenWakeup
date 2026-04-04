@@ -532,7 +532,7 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
                 activeOpacity={unlocked ? 0.7 : 1}
               >
                 <Text style={[s.themeCardName, active && s.themeCardNameActive]}>
-                  {t.nameZh}
+                  {t.name}
                 </Text>
                 {active  && <View style={s.themeCardDot} />}
                 {!unlocked && (
