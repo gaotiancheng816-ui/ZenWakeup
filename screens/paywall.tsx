@@ -9,14 +9,11 @@ import {
   View,
 } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 import { setPurchased } from '../utils/storage';
 
 const { width } = Dimensions.get('window');
-const INK = '#2a2e24';
-const INK2 = '#485040';
-const INK3 = '#7a8472';
-const GOLD = '#8a7040';
-const BG = '#dedad2';
 
 const RC_API_KEY = 'test_qBUgscRmWdZaZmNXMzyWTQvOZXs';
 
@@ -27,6 +24,9 @@ interface Props {
 }
 
 export default function PaywallScreen({ daysLeft = 0, trialExpired = false, onPurchased }: Props) {
+  const { theme: T } = useTheme();
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  const styles = makeStyles(T);
   const [loading, setLoading] = useState(false);
   const [price,   setPrice]   = useState('€ 2.99');
 
@@ -142,7 +142,9 @@ export default function PaywallScreen({ daysLeft = 0, trialExpired = false, onPu
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: BG,
@@ -237,4 +239,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 40,
   },
-});
+  });
+}

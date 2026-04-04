@@ -8,11 +8,12 @@ import {
   View
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 import { playBreathIn, playBreathOut } from '../utils/sounds';
 import { updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
-const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
 
 const GUIDANCE = [
   { label: 'Arrive',  sub: 'Close your eyes · return to breath' },
@@ -28,7 +29,7 @@ const DURATIONS = [
   { label: '20 min', seconds: 1200 },
 ];
 
-const LotusIcon = ({ size = 90 }: { size?: number }) => (
+const LotusIcon = ({ size = 90, INK, GOLD }: { size?: number; INK: string; GOLD: string }) => (
   <Svg width={size} height={size} viewBox="0 0 90 90">
     <Path d="M45 45 Q38 32 45 18 Q52 32 45 45Z" fill="none" stroke={INK} strokeWidth={0.9} opacity={0.55}/>
     <Path d="M45 45 Q32 38 18 45 Q32 52 45 45Z" fill="none" stroke={INK} strokeWidth={0.9} opacity={0.55}/>
@@ -43,7 +44,7 @@ const LotusIcon = ({ size = 90 }: { size?: number }) => (
   </Svg>
 );
 
-const EnsoIcon = ({ size = 90 }: { size?: number }) => (
+const EnsoIcon = ({ size = 90, INK, GOLD }: { size?: number; INK: string; GOLD: string }) => (
   <Svg width={size} height={size} viewBox="0 0 90 90">
     <Path
       d="M45 12 A33 33 0 1 1 32 74"
@@ -58,7 +59,7 @@ const EnsoIcon = ({ size = 90 }: { size?: number }) => (
   </Svg>
 );
 
-const EnsoLarge = () => (
+const EnsoLarge = ({ INK, GOLD }: { INK: string; GOLD: string }) => (
   <Svg width={120} height={120} viewBox="0 0 90 90">
     <Path
       d="M45 12 A33 33 0 1 1 32 74"
@@ -74,6 +75,9 @@ const EnsoLarge = () => (
 );
 
 export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
+  const { theme: T } = useTheme();
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  const s = makeStyles(T);
   const [screen,      setScreen]      = useState<'ready' | 'meditating' | 'done'>('ready');
   const [durationIdx, setDurationIdx] = useState(0);
   const [phase,       setPhase]       = useState<'inhale' | 'exhale'>('inhale');
@@ -203,35 +207,44 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
 
   const Background = () => (
     <>
-      <View style={s.mountain1} /><View style={s.mountain2} /><View style={s.mountain3} />
-      {[0.62, 0.65, 0.68].map((pos, i) => (
+      {/* 侘寂: 无山形背景，保持净空 */}
+      {T.mountain !== 'weathered' && (
+        <><View style={s.mountain1} /><View style={s.mountain2} /><View style={s.mountain3} /></>
+      )}
+      {T.mountain !== 'weathered' && [0.62, 0.65, 0.68].map((pos, i) => (
         <View key={i} style={[s.waterLine, {
           top: height * pos, opacity: 0.04 + i * 0.02,
           width: width * [0.8, 0.9, 0.75][i], alignSelf: 'center',
         }]} />
       ))}
-      <Animated.View style={[s.mist1Layer, {
-        transform: [{ translateY: mist1.interpolate({ inputRange: [0,1], outputRange: [0,-10] }) }],
-      }]} />
-      <Animated.View style={[s.mist2Layer, {
-        transform: [{ translateX: mist2.interpolate({ inputRange: [0,1], outputRange: [0,14] }) }],
-      }]} />
-      <Animated.View style={[s.brushGroup, {
-        transform: [{ translateY: brushY.interpolate({ inputRange: [0,1], outputRange: [0,-14] }) }],
-      }]}>
-        {[
-          { left: width*0.06, h:100, op:0.06 }, { left: width*0.12, h:160, op:0.08 },
-          { left: width*0.17, h:70,  op:0.05 }, { left: width*0.80, h:130, op:0.07 },
-          { left: width*0.86, h:80,  op:0.09 }, { left: width*0.91, h:110, op:0.05 },
-        ].map((b, i) => (
-          <View key={i} style={{
-            position: 'absolute', left: b.left, bottom: 0,
-            width: 1.5, height: b.h, backgroundColor: '#2a2e24',
-            opacity: b.op, borderRadius: 1,
-          }} />
-        ))}
-      </Animated.View>
-      <View style={s.cornerTL} /><View style={s.cornerBR} />
+      {T.mountain !== 'weathered' && (
+        <Animated.View style={[s.mist1Layer, {
+          transform: [{ translateY: mist1.interpolate({ inputRange: [0,1], outputRange: [0,-10] }) }],
+        }]} />
+      )}
+      {T.mountain !== 'weathered' && (
+        <Animated.View style={[s.mist2Layer, {
+          transform: [{ translateX: mist2.interpolate({ inputRange: [0,1], outputRange: [0,14] }) }],
+        }]} />
+      )}
+      {T.mountain !== 'weathered' && (
+        <Animated.View style={[s.brushGroup, {
+          transform: [{ translateY: brushY.interpolate({ inputRange: [0,1], outputRange: [0,-14] }) }],
+        }]}>
+          {[
+            { left: width*0.06, h:100, op:0.06 }, { left: width*0.12, h:160, op:0.08 },
+            { left: width*0.17, h:70,  op:0.05 }, { left: width*0.80, h:130, op:0.07 },
+            { left: width*0.86, h:80,  op:0.09 }, { left: width*0.91, h:110, op:0.05 },
+          ].map((b, i) => (
+            <View key={i} style={{
+              position: 'absolute', left: b.left, bottom: 0,
+              width: 1.5, height: b.h, backgroundColor: INK,
+              opacity: b.op, borderRadius: 1,
+            }} />
+          ))}
+        </Animated.View>
+      )}
+      {T.mountain !== 'weathered' && <><View style={s.cornerTL} /><View style={s.cornerBR} /></>}
     </>
   );
 
@@ -241,11 +254,18 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
         <StatusBar barStyle="dark-content" />
         <Background />
         <Animated.View style={[s.content, { opacity: fadeIn }]}>
-          <LotusIcon size={120} />
+          <LotusIcon size={T.mountain === 'weathered' ? 160 : 120} INK={INK} GOLD={GOLD} />
           <View style={{ height: 32 }} />
           <View style={s.inkLine} />
           <View style={{ height: 32 }} />
           <Text style={s.title}>Morning Meditation</Text>
+          {T.mountain === 'weathered' && (
+            <>
+              <View style={{ height: 8 }} />
+              <Text style={s.wabiConcept}>stillness</Text>
+              <Text style={s.wabiConceptJp}>静けさ</Text>
+            </>
+          )}
           <View style={{ height: 12 }} />
           <Text style={s.readySub}>Take a moment to settle in.{'\n'}Choose your duration when ready.</Text>
           <View style={{ height: 40 }} />
@@ -279,10 +299,17 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
         <StatusBar barStyle="dark-content" />
         <Background />
         <Animated.View style={[s.content, { opacity: fadeIn }]}>
-          <EnsoLarge />
+          <EnsoLarge INK={INK} GOLD={GOLD} />
           <View style={s.hairline} />
           <Text style={s.mainWord}>Complete</Text>
           <Text style={s.subWord}>{breathCount} breaths  ·  {DURATIONS[durationIdx].label}</Text>
+          {T.mountain === 'weathered' && (
+            <>
+              <View style={{ height: 12 }} />
+              <Text style={s.wabiConcept}>continuity</Text>
+              <Text style={s.wabiConceptJp}>継続性</Text>
+            </>
+          )}
           <View style={{ height: 48 }} />
           <Text style={s.quote}>Walk to where the water ends</Text>
           <Text style={s.quote}>Sit and watch the clouds arise</Text>
@@ -312,7 +339,7 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
           <Animated.View style={[s.orbOuter, { transform: [{ scale: orbScale }] }]}>
             <View style={s.orbMid}>
               <Animated.View style={{ transform: [{ rotate: ensoRotDeg }] }}>
-                <EnsoIcon size={90} />
+                <EnsoIcon size={T.mountain === 'weathered' ? 120 : 90} INK={INK} GOLD={GOLD} />
               </Animated.View>
             </View>
           </Animated.View>
@@ -339,44 +366,50 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
   );
 }
 
-const s = StyleSheet.create({
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
   root:       { flex: 1, backgroundColor: BG },
-  mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(42,46,36,0.045)', bottom:-width*0.95, left:-width*0.2 },
-  mountain2:  { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:'rgba(42,46,36,0.035)', bottom:-width*0.72, left:width*0.1 },
-  mountain3:  { position:'absolute', width:width*0.8, height:width*0.8, borderRadius:width*0.4,  backgroundColor:'rgba(42,46,36,0.03)',  bottom:-width*0.52, right:-width*0.05 },
-  waterLine:  { position:'absolute', height:1, backgroundColor:'#2a2e24' },
-  mist1Layer: { position:'absolute', width:width*1.3, height:80, borderRadius:40, backgroundColor:'rgba(234,230,220,0.55)', bottom:height*0.22, left:-width*0.15 },
-  mist2Layer: { position:'absolute', width:width*0.8, height:50, borderRadius:25, backgroundColor:'rgba(234,230,220,0.35)', bottom:height*0.27, right:-width*0.1 },
+  mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:`${INK}0b`, bottom:-width*0.95, left:-width*0.2 },
+  mountain2:  { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:`${INK}09`, bottom:-width*0.72, left:width*0.1 },
+  mountain3:  { position:'absolute', width:width*0.8, height:width*0.8, borderRadius:width*0.4,  backgroundColor:`${INK}07`, bottom:-width*0.52, right:-width*0.05 },
+  waterLine:  { position:'absolute', height:1, backgroundColor: INK },
+  mist1Layer: { position:'absolute', width:width*1.3, height:80, borderRadius:40, backgroundColor: T.bgMist, bottom:height*0.22, left:-width*0.15 },
+  mist2Layer: { position:'absolute', width:width*0.8, height:50, borderRadius:25, backgroundColor: T.bgMist, bottom:height*0.27, right:-width*0.1 },
   brushGroup: { position:'absolute', bottom:height*0.12, left:0, right:0, height:180 },
-  cornerTL:   { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:'rgba(42,46,36,0.07)', top:-30, left:-30 },
-  cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(42,46,36,0.06)', bottom:70, right:-15 },
-  progressWrap: { position:'absolute', top:0, left:0, right:0, height:1, backgroundColor:'rgba(42,46,36,0.08)' },
-  progressBar:  { height:1, backgroundColor:'rgba(42,46,36,0.3)' },
+  cornerTL:   { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:`${INK}12`, top:-30, left:-30 },
+  cornerBR:   { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:`${INK}0f`, bottom:70, right:-15 },
+  progressWrap: { position:'absolute', top:0, left:0, right:0, height:1, backgroundColor:`${INK}14` },
+  progressBar:  { height:1, backgroundColor:`${INK}4d` },
   content: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
-  inkLine:             { width:40, height:1, backgroundColor:'rgba(42,46,36,0.25)' },
-  title:               { fontSize:22, color:INK2, letterSpacing:4, fontWeight:'300', textAlign:'center' },
-  readySub:            { fontSize:13, color:INK3, letterSpacing:1.5, textAlign:'center', lineHeight:24, opacity:0.7 },
-  readyHint:           { fontSize:11, color:INK3, letterSpacing:2, opacity:0.45, textAlign:'center' },
+  inkLine:             { width:40, height:1, backgroundColor:`${INK}40`, marginVertical:20 },
+  title:               { fontSize:22, color:INK2, letterSpacing:2, fontWeight:'400', textAlign:'center' },
+  readySub:            { fontSize:14, color:INK3, letterSpacing:1, textAlign:'center', lineHeight:24, opacity:0.8 },
+  readyHint:           { fontSize:12, color:INK3, letterSpacing:1.5, opacity:0.55, textAlign:'center' },
   durationRow:         { flexDirection:'row', gap:10 },
-  durationBtn:         { paddingHorizontal:16, paddingVertical:10, borderRadius:2, borderWidth:1, borderColor:'rgba(42,46,36,0.18)' },
-  durationBtnActive:   { borderColor:'rgba(42,46,36,0.55)', backgroundColor:'rgba(42,46,36,0.06)' },
-  durationLabel:       { fontSize:12, color:INK3, letterSpacing:2, fontWeight:'300' },
+  durationBtn:         { paddingHorizontal:16, paddingVertical:10, borderRadius:2, borderWidth:1, borderColor:`${INK}2e` },
+  durationBtnActive:   { borderColor:`${INK}8c`, backgroundColor:`${INK}0f` },
+  durationLabel:       { fontSize:13, color:INK3, letterSpacing:1.5, fontWeight:'300' },
   durationLabelActive: { color:INK2 },
-  timerLabel:  { fontSize:13, color:INK2, letterSpacing:5, fontWeight:'300' },
-  breathLabel: { fontSize:11, color:INK3, letterSpacing:3, marginTop:4, opacity:0.7 },
+  timerLabel:  { fontSize:14, color:INK2, letterSpacing:4, fontWeight:'300' },
+  breathLabel: { fontSize:12, color:INK3, letterSpacing:2, marginTop:4, opacity:0.75 },
   stage:    { width:240, height:240, alignItems:'center', justifyContent:'center' },
-  ripple:   { position:'absolute', width:180, height:180, borderRadius:90, borderWidth:1, borderColor:'#2a2e24' },
-  orbOuter: { width:180, height:180, borderRadius:90, borderWidth:1, borderColor:'rgba(42,46,36,0.15)', backgroundColor:'rgba(234,230,220,0.6)', alignItems:'center', justifyContent:'center' },
-  orbMid:   { width:140, height:140, borderRadius:70, borderWidth:0.5, borderColor:'rgba(42,46,36,0.09)', alignItems:'center', justifyContent:'center' },
+  ripple:   { position:'absolute', width:180, height:180, borderRadius:90, borderWidth:1, borderColor: INK },
+  // orbOuter / orbMid defined below with wabi-sabi sizing
   stepDots:      { flexDirection:'row', gap:8, marginTop:20 },
-  stepDot:       { width:5, height:5, borderRadius:2.5, backgroundColor:'rgba(42,46,36,0.15)' },
+  stepDot:       { width:5, height:5, borderRadius:2.5, backgroundColor:`${INK}26` },
   stepDotActive: { width:18, borderRadius:3, backgroundColor:GOLD },
-  stepDotDone:   { backgroundColor:'rgba(138,112,64,0.4)' },
-  skip:          { fontSize:11, color:INK3, letterSpacing:3, opacity:0.45 },
-  mainWord: { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300' },
-  subWord:  { fontSize:13, color:INK2, letterSpacing:3,  fontWeight:'300', textAlign:'center' },
-  hairline: { width:32, height:1, backgroundColor:'rgba(42,46,36,0.15)', marginVertical:24 },
-  quote:    { fontSize:12, color:INK2, letterSpacing:2, fontStyle:'italic', opacity:0.7, marginBottom:8 },
-  btn:      { borderWidth:1, borderColor:'rgba(42,46,36,0.2)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
-  btnText:  { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-});
+  stepDotDone:   { backgroundColor:`${GOLD}66` },
+  skip:          { fontSize:12, color:INK3, letterSpacing:2, opacity:0.5 },
+  mainWord: { fontSize:28, color:INK2, letterSpacing:7, fontWeight:'300' },
+  subWord:  { fontSize:14, color:INK2, letterSpacing:2,  fontWeight:'300', textAlign:'center', opacity:0.8 },
+  hairline: { width:32, height:1, backgroundColor:`${INK}26`, marginVertical:24 },
+  quote:    { fontSize:13, color:INK2, letterSpacing:1.5, fontStyle:'italic', opacity:0.78, marginBottom:8 },
+  btn:           { borderWidth:1, borderColor:`${INK}33`, paddingHorizontal:32, paddingVertical:14, borderRadius: T.radiusBtn },
+  btnText:       { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'400' },
+  wabiConcept:   { fontSize:22, color:INK2, fontStyle:'italic', letterSpacing:1 },
+  wabiConceptJp: { fontSize:11, color:INK3, letterSpacing:6, fontWeight:'300', marginTop:2 },
+  orbOuter: { width: T.mountain === 'weathered' ? 220 : 180, height: T.mountain === 'weathered' ? 220 : 180, borderRadius: T.mountain === 'weathered' ? 110 : 90, borderWidth:1, borderColor:`${INK}26`, backgroundColor: T.bgCard, alignItems:'center', justifyContent:'center' },
+  orbMid:   { width: T.mountain === 'weathered' ? 170 : 140, height: T.mountain === 'weathered' ? 170 : 140, borderRadius: T.mountain === 'weathered' ? 85 : 70, borderWidth:0.5, borderColor:`${INK}17`, alignItems:'center', justifyContent:'center' },
+  });
+}

@@ -8,11 +8,15 @@ import {
   View,
 } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 
 const { width, height } = Dimensions.get('window');
-const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
 
 export default function ZenGuideScreen({ onReady }: { onReady: () => void }) {
+  const { theme: T } = useTheme();
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  const s = makeStyles(T);
   const fadeIn = useRef(new Animated.Value(0)).current;
   const mist1  = useRef(new Animated.Value(0)).current;
   const brushY = useRef(new Animated.Value(0)).current;
@@ -133,7 +137,9 @@ export default function ZenGuideScreen({ onReady }: { onReady: () => void }) {
   );
 }
 
-const s = StyleSheet.create({
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
   root:    { flex:1, backgroundColor:BG },
   content: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
   mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.04)',  top:height*0.45, left:-width*0.2 },
@@ -152,4 +158,5 @@ const s = StyleSheet.create({
   sub:       { fontSize:13, color:INK2, letterSpacing:1.5, fontWeight:'300', textAlign:'center', lineHeight:26, opacity:0.7 },
   btn:       { borderWidth:1, borderColor:'rgba(42,46,36,0.25)', paddingHorizontal:40, paddingVertical:16, borderRadius:2 },
   btnText:   { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-});
+  });
+}

@@ -8,12 +8,13 @@ import {
   View,
 } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path, Rect } from 'react-native-svg';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 import { playPageTurn, playWelcomeBell } from '../utils/sounds';
 
 const { width, height } = Dimensions.get('window');
-const INK = '#2a2e24', INK2 = '#485040', GOLD = '#8a7040', BG = '#dedad2';
 
-const WabiIcon01 = () => (
+const WabiIcon01 = ({ INK, INK2, GOLD, BG }: { INK: string; INK2: string; GOLD: string; BG: string }) => (
   <Svg width={width} height={width * 0.65} viewBox="0 0 175 130">
     <Rect width={175} height={130} fill={BG}/>
     <Ellipse cx={88} cy={38} rx={105} ry={35} fill={INK} opacity={0.045}/>
@@ -36,7 +37,7 @@ const WabiIcon01 = () => (
   </Svg>
 );
 
-const WabiIcon02 = () => (
+const WabiIcon02 = ({ INK, INK2, GOLD, BG }: { INK: string; INK2: string; GOLD: string; BG: string }) => (
   <Svg width={width} height={width * 0.65} viewBox="0 0 175 130">
     <Rect width={175} height={130} fill={BG}/>
     <Rect x={0} y={0} width={175} height={90} fill={INK} opacity={0.03}/>
@@ -76,13 +77,14 @@ const SLIDES = [
   },
 ];
 
-const ICONS = [<WabiIcon01 key="0"/>, <WabiIcon02 key="1"/>];
-
 interface Props {
   onDone: () => void;
 }
 
 export default function DogenScreen({ onDone }: Props) {
+  const { theme: T } = useTheme();
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  const s = makeStyles(T);
   const [slideIdx, setSlideIdx] = useState(0);
 
   const fadeAnim  = useRef(new Animated.Value(1)).current;
@@ -179,7 +181,8 @@ export default function DogenScreen({ onDone }: Props) {
           key={`icon-${slideIdx}`}
           style={{ opacity: iconOpac, transform: [{ scale: iconScale }] }}
         >
-          {ICONS[slideIdx]}
+          {slideIdx === 0 && <WabiIcon01 INK={INK} INK2={INK2} GOLD={GOLD} BG={BG} />}
+          {slideIdx === 1 && <WabiIcon02 INK={INK} INK2={INK2} GOLD={GOLD} BG={BG} />}
         </Animated.View>
 
         <View style={s.inkLine} />
@@ -188,6 +191,8 @@ export default function DogenScreen({ onDone }: Props) {
           <Text style={s.title}>{slide.title}</Text>
           <Text style={s.sub}>{slide.sub}</Text>
         </View>
+
+        <View style={{ height: 8 }} />
 
         <TouchableOpacity
           style={[s.btn, slide.isFinal && s.btnFinal]}
@@ -203,7 +208,9 @@ export default function DogenScreen({ onDone }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
   root:      { flex:1, backgroundColor:BG },
   mountain1: { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.045)', top:height*0.45, left:-width*0.2 },
   mountain2: { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:'rgba(30,32,48,0.035)', top:height*0.48, left:width*0.1 },
@@ -219,22 +226,24 @@ const s = StyleSheet.create({
   content: {
     flex:1,
     alignItems:'center',
-    justifyContent:'space-between',
+    justifyContent:'center',
+    paddingHorizontal:40,
     paddingTop:72,
     paddingBottom:44,
   },
-  inkLine:  { width:32, height:1, backgroundColor:'rgba(42,38,28,0.22)', marginVertical:14 },
-  textZone: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
+  inkLine:  { width:32, height:1, backgroundColor:'rgba(42,38,28,0.22)', marginVertical:20 },
+  textZone: { alignItems:'center', paddingHorizontal:0, marginBottom:4 },
   title: {
-    fontSize:16, color:INK2, letterSpacing:2, fontWeight:'300',
-    textAlign:'center', marginBottom:14, opacity:0.88,
+    fontSize:18, color:INK2, letterSpacing:1.5, fontWeight:'400',
+    textAlign:'center', marginBottom:14,
   },
   sub: {
-    fontSize:13, color:INK2, letterSpacing:1.5, fontWeight:'300',
-    textAlign:'center', lineHeight:23, opacity:0.62,
+    fontSize:14, color:INK2, letterSpacing:1, fontWeight:'300',
+    textAlign:'center', lineHeight:24, opacity:0.78,
   },
   btn:          { borderWidth:1, borderColor:'rgba(42,38,28,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2, alignItems:'center', justifyContent:'center', minWidth:width-80 },
   btnFinal:     { borderColor:'rgba(42,38,28,0.38)', backgroundColor:'rgba(42,38,28,0.05)' },
-  btnText:      { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300', textAlign:'center' },
-  btnTextFinal: { letterSpacing:1.5 },
-});
+  btnText:      { fontSize:14, color:INK2, letterSpacing:3, fontWeight:'400', textAlign:'center' },
+  btnTextFinal: { letterSpacing:2 },
+  });
+}

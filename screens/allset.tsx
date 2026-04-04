@@ -8,9 +8,10 @@ import {
   View,
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 
 const { width, height } = Dimensions.get('window');
-const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
 
 interface Props {
   mode: 'first' | 'daily';
@@ -19,6 +20,9 @@ interface Props {
 }
 
 export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
+  const { theme: T } = useTheme();
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  const s = makeStyles(T);
   const fadeIn = useRef(new Animated.Value(0)).current;
   const brushY = useRef(new Animated.Value(0)).current;
 
@@ -91,7 +95,9 @@ export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
   root:      { flex:1, backgroundColor:BG },
   content:   { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
   mountain1: { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.04)',  top:height*0.45, left:-width*0.2 },
@@ -106,4 +112,5 @@ const s = StyleSheet.create({
   hint:      { fontSize:10, color:INK3, letterSpacing:3, opacity:0.35 },
   doneBtn:   { borderWidth:1, borderColor:'rgba(42,46,36,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
   doneBtnText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-});
+  });
+}

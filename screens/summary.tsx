@@ -4,10 +4,13 @@ import {
   StatusBar, StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 import { AppData, DayRecord, getTodayRecord, loadData, saveAlarmTime } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
-const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#d4d0c8';
+// Defaults used by module-level subcomponents; overridden at render time via props
+let INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#d4d0c8';
 
 const SCORE_EN = ['Heavy','Tired','Neutral','Light','Fulfilled'];
 const MONTHS   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -310,6 +313,10 @@ const mp = StyleSheet.create({
 
 // ── 主组件 ────────────────────────────────────
 export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) {
+  const { theme: T } = useTheme();
+  // Update module-level color vars so all subcomponents pick up the theme
+  INK = T.ink; INK2 = T.ink2; INK3 = T.ink3; GOLD = T.gold; BG = T.bg;
+  const s = makeStyles(T);
   const [appData,    setAppData]    = useState<AppData | null>(null);
   const [todayRec,   setTodayRec]   = useState<DayRecord | null>(null);
   const [alarmSaved, setAlarmSaved] = useState(false);
@@ -372,27 +379,51 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
     <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
       <StatusBar barStyle="dark-content" />
 
-      <View style={s.mountain1}/><View style={s.mountain2}/><View style={s.mountain3}/>
-      {[0.38,0.41,0.44].map((pos,i) => (
+      {T.mountain !== 'weathered' && (
+        <><View style={s.mountain1}/><View style={s.mountain2}/><View style={s.mountain3}/></>
+      )}
+      {T.mountain !== 'weathered' && [0.38,0.41,0.44].map((pos,i) => (
         <View key={i} style={[s.waterLine, {
           top:height*pos, opacity:0.04+i*0.015,
           width:width*[0.72,0.85,0.68][i], alignSelf:'center',
         }]}/>
       ))}
-      <Animated.View style={[s.mist1Layer, { transform:[{ translateY: mist1.interpolate({ inputRange:[0,1], outputRange:[0,-10] }) }] }]}/>
-      <Animated.View style={[s.mist2Layer, { transform:[{ translateX: mist2.interpolate({ inputRange:[0,1], outputRange:[0,14] }) }] }]}/>
-      <Animated.View style={[s.brushGroup, { transform:[{ translateY: brushY.interpolate({ inputRange:[0,1], outputRange:[0,-14] }) }] }]}>
-        {[
-          { left:width*0.06, h:90,  op:0.05 }, { left:width*0.11, h:140, op:0.07 },
-          { left:width*0.16, h:60,  op:0.04 }, { left:width*0.80, h:110, op:0.06 },
-          { left:width*0.86, h:75,  op:0.08 }, { left:width*0.91, h:95,  op:0.05 },
-        ].map((b,i) => (
-          <View key={i} style={{ position:'absolute', left:b.left, bottom:0, width:1.5, height:b.h, backgroundColor:'#1e2030', opacity:b.op, borderRadius:1 }}/>
-        ))}
-      </Animated.View>
-      <View style={s.cornerTL}/><View style={s.cornerBR}/>
+      {T.mountain !== 'weathered' && (
+        <Animated.View style={[s.mist1Layer, { transform:[{ translateY: mist1.interpolate({ inputRange:[0,1], outputRange:[0,-10] }) }] }]}/>
+      )}
+      {T.mountain !== 'weathered' && (
+        <Animated.View style={[s.mist2Layer, { transform:[{ translateX: mist2.interpolate({ inputRange:[0,1], outputRange:[0,14] }) }] }]}/>
+      )}
+      {T.mountain !== 'weathered' && (
+        <Animated.View style={[s.brushGroup, { transform:[{ translateY: brushY.interpolate({ inputRange:[0,1], outputRange:[0,-14] }) }] }]}>
+          {[
+            { left:width*0.06, h:90,  op:0.05 }, { left:width*0.11, h:140, op:0.07 },
+            { left:width*0.16, h:60,  op:0.04 }, { left:width*0.80, h:110, op:0.06 },
+            { left:width*0.86, h:75,  op:0.08 }, { left:width*0.91, h:95,  op:0.05 },
+          ].map((b,i) => (
+            <View key={i} style={{ position:'absolute', left:b.left, bottom:0, width:1.5, height:b.h, backgroundColor: INK, opacity:b.op, borderRadius:1 }}/>
+          ))}
+        </Animated.View>
+      )}
+      {T.mountain !== 'weathered' && <><View style={s.cornerTL}/><View style={s.cornerBR}/></>}
 
       <Animated.View style={[s.content, { opacity: fadeIn }]}>
+
+        {/* 侘寂: 堆石 + 哲学词 */}
+        {T.mountain === 'weathered' && (
+          <View style={{ alignItems:'center', marginBottom:24 }}>
+            <Svg width={86} height={108} viewBox="0 0 86 108">
+              <Path d="M6 102 C14 96 28 93 43 94 C58 95 72 98 78 103 C70 108 56 111 43 110 C30 109 16 106 6 102Z" fill="#8a8272" opacity={0.82}/>
+              <Path d="M13 84 C20 79 32 76 43 77 C54 78 65 81 69 86 C62 91 52 93 43 92 C34 91 23 88 13 84Z" fill="#928a7c" opacity={0.82}/>
+              <Path d="M20 68 C26 64 34 62 44 63 C53 64 62 67 64 72 C58 77 51 79 43 78 C35 77 27 74 20 68Z" fill="#9a9282" opacity={0.82}/>
+              <Path d="M28 54 C33 50 38 49 44 50 C50 51 56 54 56 58 C52 63 48 64 43 63 C38 62 32 60 28 54Z" fill="#a0988a" opacity={0.82}/>
+              <Path d="M34 43 C37 40 41 39 44 40 C47 41 50 43 49 47 C47 50 45 51 43 50 C40 49 36 47 34 43Z" fill="#a8a09a" opacity={0.82}/>
+            </Svg>
+            <View style={{ height: 16 }}/>
+            <Text style={s.wabiConcept}>continuity</Text>
+            <Text style={s.wabiConceptJp}>継続性</Text>
+          </View>
+        )}
 
         {/* 标题 */}
         <Text style={s.dateStr}>{dateStr}</Text>
@@ -528,61 +559,66 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
   );
 }
 
-const s = StyleSheet.create({
-  scroll:        { flex:1, backgroundColor:BG },
-  scrollContent: { alignItems:'center', paddingHorizontal:32, paddingTop:72 },
-  mountain1:     { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.045)', top:height*0.45, left:-width*0.2 },
-  mountain2:     { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:'rgba(30,32,48,0.035)', top:height*0.48, left:width*0.1 },
-  mountain3:     { position:'absolute', width:width*0.8, height:width*0.8, borderRadius:width*0.4,  backgroundColor:'rgba(30,32,48,0.03)',  top:height*0.50, right:-width*0.05 },
-  waterLine:     { position:'absolute', height:1, backgroundColor:'#1e2030' },
-  mist1Layer:    { position:'absolute', width:width*1.3, height:80,  borderRadius:40, backgroundColor:'rgba(220,216,206,0.45)', top:height*0.35, left:-width*0.15 },
-  mist2Layer:    { position:'absolute', width:width*0.85, height:50, borderRadius:25, backgroundColor:'rgba(220,216,206,0.3)',  top:height*0.40, right:-width*0.1 },
-  brushGroup:    { position:'absolute', top:height*0.28, left:0, right:0, height:170 },
-  cornerTL:      { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:'rgba(30,32,48,0.07)', top:-30, left:-30 },
-  cornerBR:      { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:'rgba(30,32,48,0.06)', top:height*0.55, right:-15 },
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
+    scroll:        { flex:1, backgroundColor:BG },
+    scrollContent: { alignItems:'center', paddingHorizontal:32, paddingTop:72 },
+    mountain1:     { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:`${INK}0b`, top:height*0.45, left:-width*0.2 },
+    mountain2:     { position:'absolute', width:width*1.1, height:width*1.1, borderRadius:width*0.55, backgroundColor:`${INK}09`, top:height*0.48, left:width*0.1 },
+    mountain3:     { position:'absolute', width:width*0.8, height:width*0.8, borderRadius:width*0.4,  backgroundColor:`${INK}07`, top:height*0.50, right:-width*0.05 },
+    waterLine:     { position:'absolute', height:1, backgroundColor: INK },
+    mist1Layer:    { position:'absolute', width:width*1.3, height:80,  borderRadius:40, backgroundColor: T.bgMist, top:height*0.35, left:-width*0.15 },
+    mist2Layer:    { position:'absolute', width:width*0.85, height:50, borderRadius:25, backgroundColor: T.bgMist, top:height*0.40, right:-width*0.1 },
+    brushGroup:    { position:'absolute', top:height*0.28, left:0, right:0, height:170 },
+    cornerTL:      { position:'absolute', width:100, height:100, borderRadius:50, borderWidth:1, borderColor:`${INK}12`, top:-30, left:-30 },
+    cornerBR:      { position:'absolute', width:70,  height:70,  borderRadius:35, borderWidth:1, borderColor:`${INK}0f`, top:height*0.55, right:-15 },
 
-  content:        { width:'100%', alignItems:'center' },
-  dateStr:        { fontSize:13, color:INK3, letterSpacing:5, fontWeight:'300', marginBottom:8 },
-  mainWord:       { fontSize:28, color:INK2, letterSpacing:10, fontWeight:'300' },
-  lineWrap:       { width:'100%', height:1, backgroundColor:'rgba(30,32,48,0.08)', marginTop:16, marginBottom:40 },
-  line:           { height:1, backgroundColor:'rgba(30,32,48,0.3)' },
+    content:        { width:'100%', alignItems:'center' },
+    dateStr:        { fontSize:13, color:INK3, letterSpacing:3, fontWeight:'300', marginBottom:8, opacity:0.8 },
+    mainWord:       { fontSize:28, color:INK2, letterSpacing:7, fontWeight:'300' },
+    lineWrap:       { width:'100%', height:1, backgroundColor:`${INK}14`, marginTop:16, marginBottom:36 },
+    line:           { height:1, backgroundColor:`${INK}4d` },
 
-  sectionLabel:   { fontSize:11, color:INK2, letterSpacing:5, fontWeight:'300', alignSelf:'flex-start' },
-  sectionDivider: { width:'100%', height:1, backgroundColor:'rgba(30,32,48,0.08)', marginVertical:32 },
+    sectionLabel:   { fontSize:12, color:INK2, letterSpacing:4, fontWeight:'400', alignSelf:'flex-start', opacity:0.7 },
+    sectionDivider: { width:'100%', height:1, backgroundColor:`${INK}14`, marginVertical:28 },
 
-  itemRow:     { flexDirection:'row', alignItems:'center', width:'100%' },
-  itemTitle:   { fontSize:15, color:INK2, letterSpacing:2, fontWeight:'300' },
-  itemSub:     { fontSize:10, color:INK3, letterSpacing:1, fontStyle:'italic', marginTop:3, opacity:0.65 },
-  dim:         { opacity:0.3 },
-  checkOn:     { fontSize:14, color:GOLD },
-  checkOff:    { fontSize:14, color:'rgba(30,32,48,0.2)' },
-  itemDivider: { height:1, backgroundColor:'rgba(30,32,48,0.06)', marginVertical:16, width:'100%' },
+    itemRow:     { flexDirection:'row', alignItems:'center', width:'100%' },
+    itemTitle:   { fontSize:15, color:INK2, letterSpacing:1.5, fontWeight:'400' },
+    itemSub:     { fontSize:11, color:INK3, letterSpacing:0.5, fontStyle:'italic', marginTop:3, opacity:0.7 },
+    dim:         { opacity:0.3 },
+    checkOn:     { fontSize:14, color:GOLD },
+    checkOff:    { fontSize:14, color:`${INK}33` },
+    itemDivider: { height:1, backgroundColor:`${INK}0f`, marginVertical:16, width:'100%' },
 
-  quietNum:    { fontSize:48, color:INK, fontWeight:'200', letterSpacing:2 },
-  quietLabel:  { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'300' },
-  quietSub:    { fontSize:10, color:INK3, letterSpacing:1, fontStyle:'italic', opacity:0.6, alignSelf:'flex-start', marginTop:4 },
+    quietNum:    { fontSize:48, color:INK, fontWeight:'200', letterSpacing:2 },
+    quietLabel:  { fontSize:14, color:INK2, letterSpacing:2, fontWeight:'300' },
+    quietSub:    { fontSize:11, color:INK3, letterSpacing:0.5, fontStyle:'italic', opacity:0.7, alignSelf:'flex-start', marginTop:4 },
 
-  bigTime:     { fontSize:48, color:INK, fontWeight:'200', letterSpacing:2, alignSelf:'flex-start' },
-  accumTime:   { fontSize:11, color:INK2, letterSpacing:2, marginTop:6, alignSelf:'flex-start' },
+    bigTime:     { fontSize:48, color:INK, fontWeight:'200', letterSpacing:2, alignSelf:'flex-start' },
+    accumTime:   { fontSize:12, color:INK2, letterSpacing:1.5, marginTop:6, alignSelf:'flex-start', opacity:0.75 },
 
-  moodRow:     { flexDirection:'row', alignItems:'center', gap:20, alignSelf:'flex-start' },
-  moodLabel:   { fontSize:28, color:INK, letterSpacing:5, fontWeight:'200' },
-  moodSub:     { fontSize:10, color:INK3, letterSpacing:1, fontStyle:'italic', opacity:0.6 },
+    moodRow:     { flexDirection:'row', alignItems:'center', gap:20, alignSelf:'flex-start' },
+    moodLabel:   { fontSize:28, color:INK, letterSpacing:4, fontWeight:'200' },
+    moodSub:     { fontSize:11, color:INK3, letterSpacing:0.5, fontStyle:'italic', opacity:0.7 },
 
-  quoteBlock:  { width:'100%', alignItems:'center', paddingVertical:8 },
-  quoteDash:   { fontSize:11, color:INK3, letterSpacing:4, opacity:0.35 },
-  quoteText:   { fontSize:14, color:INK2, letterSpacing:2, fontStyle:'italic', textAlign:'center', lineHeight:24 },
+    quoteBlock:  { width:'100%', alignItems:'center', paddingVertical:8 },
+    quoteDash:   { fontSize:11, color:INK3, letterSpacing:3, opacity:0.4 },
+    quoteText:   { fontSize:14, color:INK2, letterSpacing:1.5, fontStyle:'italic', textAlign:'center', lineHeight:24, opacity:0.85 },
 
-  seeYou:       { fontSize:22, color:INK2, letterSpacing:8, fontWeight:'300', alignSelf:'center' },
-  alarmSetRow:  { flexDirection:'row', alignItems:'center', gap:20 },
-  alarmCol:     { alignItems:'center', gap:4 },
-  alarmArrow:   { padding:12 },
-  alarmArrowText:{ fontSize:14, color:INK3, opacity:0.5 },
-  alarmTime:    { fontSize:48, color:INK, fontWeight:'200', letterSpacing:6 },
-  alarmColon:   { fontSize:48, color:INK2, fontWeight:'200', marginBottom:4 },
-  saveAlarmBtn: { marginTop:24, borderWidth:1, borderColor:'rgba(42,46,36,0.22)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
-  saveAlarmText:{ fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-  savedHint:   { fontSize:11, color:GOLD, letterSpacing:3, marginTop:12 },
-  doneBtn:     { marginTop:16, borderWidth:1, borderColor:'rgba(42,46,36,0.38)', backgroundColor:'rgba(42,46,36,0.05)', paddingHorizontal:32, paddingVertical:14, borderRadius:2 },
-  doneBtnText: { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'300' },
-});
+    seeYou:        { fontSize:22, color:INK2, letterSpacing:6, fontWeight:'300', alignSelf:'center' },
+    alarmSetRow:   { flexDirection:'row', alignItems:'center', gap:20 },
+    alarmCol:      { alignItems:'center', gap:4 },
+    alarmArrow:    { padding:12 },
+    alarmArrowText:{ fontSize:14, color:INK3, opacity:0.5 },
+    alarmTime:     { fontSize:48, color:INK, fontWeight:'200', letterSpacing:6 },
+    alarmColon:    { fontSize:48, color:INK2, fontWeight:'200', marginBottom:4 },
+    saveAlarmBtn:  { marginTop:24, borderWidth:1, borderColor:`${INK}38`, paddingHorizontal:32, paddingVertical:14, borderRadius: T.radiusBtn },
+    saveAlarmText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
+    savedHint:     { fontSize:11, color:GOLD, letterSpacing:3, marginTop:12 },
+    doneBtn:       { marginTop:16, borderWidth:1, borderColor:`${INK}61`, backgroundColor:`${INK}0d`, paddingHorizontal:32, paddingVertical:14, borderRadius: T.radiusBtn },
+    doneBtnText:   { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'300' },
+    wabiConcept:   { fontSize:22, color:INK2, fontStyle:'italic', letterSpacing:1, marginTop:4 },
+    wabiConceptJp: { fontSize:11, color:INK3, letterSpacing:6, fontWeight:'300', marginTop:2 },
+  });
+}

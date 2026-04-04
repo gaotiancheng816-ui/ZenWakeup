@@ -157,6 +157,16 @@ export async function loadCurrentPage(): Promise<string | null> {
   try { return await AsyncStorage.getItem(PAGE_KEY); } catch { return null; }
 }
 
+const THEME_KEY = 'zenwakeup_theme';
+
+export async function saveThemeId(id: string): Promise<void> {
+  try { await AsyncStorage.setItem(THEME_KEY, id); } catch {}
+}
+
+export async function loadThemeId(): Promise<string | null> {
+  try { return await AsyncStorage.getItem(THEME_KEY); } catch { return null; }
+}
+
 // 标记为已购买（RevenueCat 接入后调用这个）
 export async function setPurchased(): Promise<void> {
   const data = await loadData();

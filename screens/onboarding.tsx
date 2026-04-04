@@ -8,13 +8,14 @@ import {
   View,
 } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
+import { AppTheme } from '../constants/app-themes';
+import { useTheme } from '../utils/theme-context';
 import { playGuqinPluck, playPageTurn } from '../utils/sounds';
 import { completeOnboarding } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
-const INK = '#2a2e24', INK2 = '#485040', INK3 = '#7a8472', GOLD = '#8a7040', BG = '#dedad2';
 
-const MountainPathIcon = () => (
+const MountainPathIcon = ({ INK, INK2, GOLD, BG }: { INK: string; INK2: string; GOLD: string; BG: string }) => (
   <Svg width={200} height={160} viewBox="0 0 100 80">
     <Path d="M0,70 L15,48 L30,70Z"  fill="none" stroke={INK} strokeWidth={0.5} opacity={0.15}/>
     <Path d="M20,70 L38,42 L56,70Z" fill="none" stroke={INK} strokeWidth={0.5} opacity={0.12}/>
@@ -32,7 +33,7 @@ const MountainPathIcon = () => (
   </Svg>
 );
 
-const EveningIcon = () => (
+const EveningIcon = ({ INK, INK2, GOLD }: { INK: string; INK2: string; GOLD: string }) => (
   <Svg width={200} height={160} viewBox="0 0 100 80">
     <Path d="M50 12 A16 16 0 1 1 50 44 A10 10 0 1 0 50 12Z" fill="none" stroke={GOLD} strokeWidth={0.9} opacity={0.6}/>
     <Circle cx={30} cy={18} r={1}   fill={GOLD} opacity={0.45}/>
@@ -48,7 +49,7 @@ const EveningIcon = () => (
   </Svg>
 );
 
-const PracticeIcon = () => (
+const PracticeIcon = ({ INK, INK2, GOLD }: { INK: string; INK2: string; GOLD: string }) => (
   <Svg width={200} height={160} viewBox="0 0 100 80">
     <Circle cx={22} cy={30} r={8}   fill="none" stroke={GOLD} strokeWidth={0.9} opacity={0.7}/>
     <Circle cx={22} cy={30} r={2.5} fill={GOLD} opacity={0.5}/>
@@ -71,7 +72,6 @@ const PracticeIcon = () => (
 
 const SLIDES = [
   {
-    icon: <MountainPathIcon />,
     title: 'The Mountain Path',
     sub: '180 days of quiet mornings.\nEach complete day unlocks\na new element on your path.',
   },
@@ -82,6 +82,9 @@ interface Props {
 }
 
 export default function OnboardingScreen({ onDone }: Props) {
+  const { theme: T } = useTheme();
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  const s = makeStyles(T);
   const [slideIdx, setSlideIdx] = useState(0);
 
   const fadeAnim  = useRef(new Animated.Value(1)).current;
@@ -178,7 +181,7 @@ export default function OnboardingScreen({ onDone }: Props) {
 
       <Animated.View style={[s.content, { opacity: fadeAnim }]}>
         <Animated.View style={{ opacity: iconOpac, transform: [{ scale: iconScale }] }}>
-          {slide.icon}
+          {slideIdx === 0 && <MountainPathIcon INK={INK} INK2={INK2} GOLD={GOLD} BG={BG} />}
         </Animated.View>
         <View style={{ height:24 }} />
         <View style={s.inkLine} />
@@ -197,7 +200,9 @@ export default function OnboardingScreen({ onDone }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+function makeStyles(T: AppTheme) {
+  const INK = T.ink, INK2 = T.ink2, INK3 = T.ink3, GOLD = T.gold, BG = T.bg;
+  return StyleSheet.create({
   root:    { flex:1, backgroundColor:BG },
   content: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:40 },
   mountain1:  { position:'absolute', width:width*1.4, height:width*1.4, borderRadius:width*0.7,  backgroundColor:'rgba(30,32,48,0.04)',  top:height*0.45, left:-width*0.2 },
@@ -217,4 +222,5 @@ const s = StyleSheet.create({
   sub:         { fontSize:12, color:INK2, letterSpacing:1.5, fontWeight:'300', textAlign:'center', lineHeight:22, opacity:0.75 },
   nextBtn:     { borderWidth:1, borderColor:'rgba(42,46,36,0.25)', paddingHorizontal:36, paddingVertical:14, borderRadius:2 },
   nextBtnText: { fontSize:13, color:INK2, letterSpacing:4, fontWeight:'300' },
-});
+  });
+}

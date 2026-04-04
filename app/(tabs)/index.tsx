@@ -7,11 +7,12 @@ import EveningScreen from '../../screens/evening';
 import DaytimeScreen from '../../screens/hourly';
 import IntroMeditationScreen from '../../screens/intro-meditation';
 import MeditationScreen from '../../screens/meditation';
+import MountainPathScreen from '../../screens/mountain-path';
 import OnboardingScreen from '../../screens/onboarding';
 import PaywallScreen from '../../screens/paywall';
 import SummaryScreen from '../../screens/summary';
 import ZenGuideScreen from '../../screens/zen-guide';
-import { getTrialStatus, loadCurrentPage, loadData, saveCurrentPage } from '../../utils/storage';
+import { getTrialStatus, getTodayRecord, loadCurrentPage, loadData, saveCurrentPage } from '../../utils/storage';
 
 type Page =
   | 'loading'
@@ -22,6 +23,7 @@ type Page =
   | 'allset'
   | 'alarm'
   | 'meditation'
+  | 'mountain-path'
   | 'daytime'
   | 'evening'
   | 'summary'
@@ -53,7 +55,19 @@ export default function App() {
       setDaysLeft(trial.daysLeft);
       // 恢复上次页面（meditation/daytime/evening/summary），避免 Focus 模式返回后丢失进度
       const saved = await loadCurrentPage();
-      setPage((saved as Page) ?? 'alarm');
+      if (saved) {
+        setPage(saved as Page);
+      } else {
+        // 无保存页面时，根据今日进度决定显示 alarm 还是 daytime/evening
+        const today = getTodayRecord(data);
+        if (today.eveningDone) {
+          setPage('summary');
+        } else if (today.morningDone) {
+          setPage('daytime');
+        } else {
+          setPage('alarm');
+        }
+      }
     });
   }, []);
 
@@ -89,7 +103,8 @@ export default function App() {
           }}
         />
       )}
-      {page === 'meditation'       && <MeditationScreen       onDone={() => setPage('daytime')} />}
+      {page === 'meditation'    && <MeditationScreen    onDone={() => setPage('mountain-path')} />}
+      {page === 'mountain-path' && <MountainPathScreen  onDone={() => setPage('daytime')} />}
       {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
       {page === 'evening'          && <EveningScreen          onDone={() => setPage('summary')} />}
       {page === 'summary'          && <SummaryScreen onDone={() => setPage('alarm')} />}
