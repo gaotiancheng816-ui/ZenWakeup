@@ -4,7 +4,7 @@ import {
   StatusBar, StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
-import { AppTheme } from '../constants/app-themes';
+import { ALL_THEMES, AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
 import { AppData, DayRecord, getTodayRecord, loadData, saveAlarmTime } from '../utils/storage';
 
@@ -313,7 +313,7 @@ const mp = StyleSheet.create({
 
 // ── 主组件 ────────────────────────────────────
 export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) {
-  const { theme: T } = useTheme();
+  const { theme: T, setTheme, morningDays } = useTheme();
   // Update module-level color vars so all subcomponents pick up the theme
   INK = T.ink; INK2 = T.ink2; INK3 = T.ink3; GOLD = T.gold; BG = T.bg;
   const s = makeStyles(T);
@@ -516,6 +516,35 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
 
         <View style={s.sectionDivider}/>
 
+        {/* 主题选择 */}
+        <Text style={s.sectionLabel}>Theme</Text>
+        <View style={{ height: 16 }} />
+        <View style={s.themeRow}>
+          {ALL_THEMES.map(t => {
+            const unlocked = t.unlockDay <= morningDays;
+            const active   = t.id === T.id;
+            return (
+              <TouchableOpacity
+                key={t.id}
+                style={[s.themeCard, active && s.themeCardActive, !unlocked && s.themeCardLocked]}
+                onPress={() => unlocked && setTheme(t.id)}
+                disabled={!unlocked}
+                activeOpacity={unlocked ? 0.7 : 1}
+              >
+                <Text style={[s.themeCardName, active && s.themeCardNameActive]}>
+                  {t.nameZh}
+                </Text>
+                {active  && <View style={s.themeCardDot} />}
+                {!unlocked && (
+                  <Text style={s.themeCardHint}>day {t.unlockDay}</Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={s.sectionDivider}/>
+
         {/* 明日闹钟 */}
         <Text style={s.seeYou}>Until tomorrow</Text>
         <View style={{ height:24 }}/>
@@ -624,6 +653,14 @@ function makeStyles(T: AppTheme) {
     savedHint:     { fontSize:11, color:GOLD, letterSpacing:3, marginTop:12 },
     doneBtn:       { marginTop:16, borderWidth:1, borderColor:`${INK}61`, backgroundColor:`${INK}0d`, paddingHorizontal:32, paddingVertical:14, borderRadius: T.radiusBtn },
     doneBtnText:   { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'300' },
+    themeRow:            { flexDirection:'row', gap:8, width:'100%' },
+    themeCard:           { flex:1, paddingVertical:14, paddingHorizontal:6, borderWidth:1, borderColor:`${INK}20`, borderRadius:T.radiusCard, alignItems:'center', gap:5 },
+    themeCardActive:     { borderColor:`${INK}70`, backgroundColor:`${INK}08` },
+    themeCardLocked:     { opacity:0.35 },
+    themeCardName:       { fontSize:12, color:INK3, letterSpacing:1.5, fontWeight:'300', textAlign:'center' },
+    themeCardNameActive: { color:INK, fontWeight:'400' },
+    themeCardHint:       { fontSize:9,  color:INK3, letterSpacing:1.5, opacity:0.7 },
+    themeCardDot:        { width:4, height:4, borderRadius:2, backgroundColor:GOLD, opacity:0.85 },
     wabiConcept:   { fontSize:22, color:INK2, fontStyle:'italic', letterSpacing:1, marginTop:4 },
     wabiConceptJp: { fontSize:11, color:INK3, letterSpacing:6, fontWeight:'300', marginTop:2 },
     inkBleed:       { position:'absolute', width:width*0.75, height:width*0.75, borderRadius:width*0.375, backgroundColor:INK, opacity:0.055, top:-width*0.32, left:-width*0.28 },
