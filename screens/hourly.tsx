@@ -158,6 +158,12 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
         </Animated.View>
       )}
       {T.mountain !== 'weathered' && <><View style={s.cornerTL} /><View style={s.cornerBR} /></>}
+      {/* 水墨: 墨晕渗染 + 大字背景 + 印章 */}
+      {T.mountain === 'brushstroke' && <View style={s.inkBleed} />}
+      {T.mountain === 'brushstroke' && <Text style={s.bgChar} pointerEvents="none">观</Text>}
+      {T.mountain === 'brushstroke' && T.seal && (
+        <View style={s.sealCorner}><Text style={s.sealCornerText}>{T.seal}</Text></View>
+      )}
 
       <Animated.View style={[s.content, { opacity: fadeIn }]}>
 
@@ -170,6 +176,9 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
           <Animated.View style={{ transform: [{ scale: rippleS }] }}>
             <RippleIcon INK={INK} GOLD={GOLD} />
           </Animated.View>
+          {T.mountain === 'brushstroke' && (
+            <Text style={s.inkSubLabel}>专  注</Text>
+          )}
           <Text style={s.mainWord}>Focus</Text>
           {T.mountain === 'weathered' && (
             <>
@@ -230,5 +239,10 @@ function makeStyles(T: AppTheme) {
   eveningHint:   { fontSize:11, color:GOLD, letterSpacing:1.5, opacity:0.75, marginTop:10, textAlign:'center' },
   wabiConcept:   { fontSize:20, color:INK2, fontStyle:'italic', letterSpacing:1 },
   wabiConceptJp: { fontSize:11, color:INK3, letterSpacing:6, fontWeight:'300', marginTop:2 },
+  inkBleed:       { position:'absolute', width:width*0.75, height:width*0.75, borderRadius:width*0.375, backgroundColor:INK, opacity:0.055, top:-width*0.32, left:-width*0.28 },
+  bgChar:         { position:'absolute', fontSize:260, color:INK, opacity:0.038, fontWeight:'700', top:height*0.08, right:-16, includeFontPadding:false },
+  sealCorner:     { position:'absolute', top:58, right:28, width:38, height:38, backgroundColor:T.gold, alignItems:'center', justifyContent:'center' },
+  sealCornerText: { color:'#fff8f0', fontSize:17, fontWeight:'500' },
+  inkSubLabel:    { fontSize:11, color:T.gold, letterSpacing:8, fontWeight:'300', marginBottom:4, opacity:0.85 },
   });
 }
