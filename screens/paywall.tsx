@@ -8,14 +8,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+import Purchases from 'react-native-purchases';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
 import { setPurchased } from '../utils/storage';
 
 const { width } = Dimensions.get('window');
 
-const RC_API_KEY = 'test_qBUgscRmWdZaZmNXMzyWTQvOZXs';
+const RC_API_KEY = 'goog_rjHUqiJZGzrvmXnxGAiyrSUfbFx';
 
 interface Props {
   daysLeft?: number;
@@ -31,7 +31,6 @@ export default function PaywallScreen({ daysLeft = 0, trialExpired = false, onPu
   const [price,   setPrice]   = useState('€ 2.99');
 
   useEffect(() => {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
     Purchases.configure({ apiKey: RC_API_KEY });
     fetchPrice();
   }, []);
