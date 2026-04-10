@@ -1,5 +1,6 @@
-const FileSystem = require('expo-file-system/legacy');
-const { Sound } = require('expo-av/build/Audio');
+import * as FileSystem from 'expo-file-system';
+import { Audio } from 'expo-av';
+const { Sound } = Audio;
 
 const SAMPLE_RATE = 44100;
 
