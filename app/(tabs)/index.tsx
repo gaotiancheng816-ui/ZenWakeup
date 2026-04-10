@@ -38,7 +38,7 @@ export default function App() {
 
   useEffect(() => {
     // DEV: URL 参数跳页 (?dev=meditation)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location?.search) {
       const devPage = new URLSearchParams(window.location.search).get('dev') as Page | null;
       if (devPage) { setPage(devPage); return; }
     }
