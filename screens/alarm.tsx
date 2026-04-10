@@ -220,8 +220,17 @@ export default function ZenAlarmScreen({
       if (Platform.OS !== 'web') {
         const response = await Notifications.getLastNotificationResponseAsync();
         if (response && !triggeredRef.current) {
-          triggeredRef.current = true;
-          triggerAlarm();
+          // Only trigger if notification was received today — ignore stale history
+          const notifMs = response.notification.date * 1000;
+          const notifDate = new Date(notifMs);
+          const now = new Date();
+          const isToday = notifDate.toDateString() === now.toDateString();
+          // Also ignore if it's more than 4 hours old (user likely dismissed it already)
+          const ageHours = (Date.now() - notifMs) / 3600000;
+          if (isToday && ageHours < 4) {
+            triggeredRef.current = true;
+            triggerAlarm();
+          }
         }
       }
     });

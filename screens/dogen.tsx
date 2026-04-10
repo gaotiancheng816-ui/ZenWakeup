@@ -64,6 +64,12 @@ const WabiIcon02 = ({ INK, INK2, GOLD, BG }: { INK: string; INK2: string; GOLD: 
 
 const SLIDES = [
   {
+    title: 'Welcome to Zen Wakeup',
+    sub: 'A quiet morning practice.\nBuilt around stillness, breath,\nand the slow rhythm of each day.',
+    btn: 'Begin  ›',
+    isFinal: false,
+  },
+  {
     title: 'Eight centuries ago,',
     sub: 'a monk named Dogen\nwoke before sunrise every morning.\n\nNot to achieve anything.\nJust to sit. Just to breathe.\nHe called it — simply being.',
     btn: 'Next  ›',
