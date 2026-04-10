@@ -103,11 +103,11 @@ export default function App() {
           }}
         />
       )}
-      {page === 'meditation'    && <MeditationScreen    onDone={() => setPage('mountain-path')} />}
-      {page === 'mountain-path' && <MountainPathScreen  onDone={() => setPage('daytime')} />}
-      {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
-      {page === 'evening'          && <EveningScreen          onDone={() => setPage('summary')} />}
-      {page === 'summary'          && <SummaryScreen onDone={() => setPage('alarm')} />}
+      {page === 'meditation'    && <MeditationScreen    onDone={() => setPage('daytime')} />}
+      {page === 'daytime'       && <DaytimeScreen       onEvening={() => setPage('evening')} />}
+      {page === 'evening'       && <EveningScreen       onDone={() => setPage('mountain-path')} />}
+      {page === 'mountain-path' && <MountainPathScreen  onDone={() => setPage('summary')} />}
+      {page === 'summary'       && <SummaryScreen       onDone={() => setPage('alarm')} />}
       {page === 'paywall'          && (
         <PaywallScreen
           trialExpired={true}
