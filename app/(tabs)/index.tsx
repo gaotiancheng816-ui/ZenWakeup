@@ -1,47 +1,124 @@
-import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import AlarmScreen from '../../screens/alarm';
+import AllSetScreen from '../../screens/allset';
+import DogenScreen from '../../screens/dogen';
 import EveningScreen from '../../screens/evening';
 import DaytimeScreen from '../../screens/hourly';
 import IntroMeditationScreen from '../../screens/intro-meditation';
 import MeditationScreen from '../../screens/meditation';
+import MountainPathScreen from '../../screens/mountain-path';
 import OnboardingScreen from '../../screens/onboarding';
+import PaywallScreen from '../../screens/paywall';
 import SummaryScreen from '../../screens/summary';
 import ZenGuideScreen from '../../screens/zen-guide';
+import { getTrialStatus, getTodayRecord, loadCurrentPage, loadData, saveCurrentPage } from '../../utils/storage';
 
-type Page = 'onboarding' | 'zen-guide' | 'intro-meditation' | 'alarm' | 'meditation' | 'daytime' | 'evening' | 'summary';
-const PAGES: Page[] = ['onboarding', 'alarm', 'meditation', 'daytime', 'evening', 'summary'];
+type Page =
+  | 'loading'
+  | 'dogen'
+  | 'zen-guide'
+  | 'intro-meditation'
+  | 'onboarding'
+  | 'allset'
+  | 'alarm'
+  | 'meditation'
+  | 'mountain-path'
+  | 'daytime'
+  | 'evening'
+  | 'summary'
+  | 'paywall';
 
 export default function App() {
-  const [page, setPage] = useState<Page>('alarm');
+  const [page, setPage] = useState<Page>('loading');
+  const [daysLeft, setDaysLeft] = useState(7);
+  const [isFirstTime,  setIsFirstTime]  = useState(false);
+  const [alarmTimeStr, setAlarmTimeStr] = useState('06:00');
+  const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('first');
+
+  useEffect(() => {
+    // DEV: URL 参数跳页 (?dev=meditation)
+    if (typeof window !== 'undefined') {
+      const devPage = new URLSearchParams(window.location.search).get('dev') as Page | null;
+      if (devPage) { setPage(devPage); return; }
+    }
+    loadData().then(async data => {
+      if (!data.hasOnboarded) {
+        setPage('dogen');
+        return;
+      }
+      const trial = await getTrialStatus();
+      if (!trial.isPurchased && trial.trialExpired) {
+        setPage('paywall');
+        return;
+      }
+      setDaysLeft(trial.daysLeft);
+      // 恢复上次页面（meditation/daytime/evening/summary），避免 Focus 模式返回后丢失进度
+      const saved = await loadCurrentPage();
+      if (saved) {
+        setPage(saved as Page);
+      } else {
+        // 无保存页面时，根据今日进度决定显示 alarm 还是 daytime/evening
+        const today = getTodayRecord(data);
+        if (today.eveningDone) {
+          setPage('summary');
+        } else if (today.morningDone) {
+          setPage('daytime');
+        } else {
+          setPage('alarm');
+        }
+      }
+    });
+  }, []);
+
+  // 页面变化时持久化，方便从 Focus 等模式返回后恢复
+  useEffect(() => { saveCurrentPage(page); }, [page]);
+
+  if (page === 'loading') return <View style={s.root} />;
 
   return (
     <View style={s.root}>
-      {page === 'onboarding' && <OnboardingScreen onDone={() => setPage('zen-guide')} />}
-      {page === 'alarm'      && <AlarmScreen      onDismiss={() => setPage('meditation')} />}
-      {page === 'meditation' && <MeditationScreen onDone={() => setPage('daytime')} />}
-      {page === 'daytime'   && <DaytimeScreen onEvening={() => setPage('evening')} />}
-      {page === 'evening'   && <EveningScreen onDone={() => setPage('summary')} />}
-      {page === 'summary'    && <SummaryScreen />}
-      {page === 'zen-guide'        && <ZenGuideScreen       onReady={() => setPage('intro-meditation')} />}
-      {page === 'intro-meditation' && <IntroMeditationScreen onDone={() => setPage('alarm')} />}
-
-      <View style={s.nav}>
-        {['入','醒','心','息','归','·'].map((label, i) => (
-          <TouchableOpacity key={i} onPress={() => setPage(PAGES[i])} style={[s.navBtn, page===PAGES[i] && s.navBtnActive]}>
-            <Text style={[s.navText, page===PAGES[i] && s.navTextActive]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {page === 'dogen'            && <DogenScreen            onDone={() => setPage('intro-meditation')} />}
+      {page === 'intro-meditation' && <IntroMeditationScreen  onDone={() => setPage('zen-guide')} />}
+      {page === 'zen-guide'        && <ZenGuideScreen         onReady={() => setPage('onboarding')} />}
+      {page === 'onboarding'       && <OnboardingScreen       onDone={() => setPage('alarm')} />}
+      {page === 'allset' && (
+        <AllSetScreen
+          mode={allsetMode}
+          alarmTime={alarmTimeStr}
+          onDone={() => setPage('alarm')}
+        />
+      )}
+      {page === 'alarm' && (
+        <AlarmScreen
+          onDismiss={() => setPage('meditation')}
+          onConfirmed={() => {
+            loadData().then(data => {
+              const hh = String(data.alarmHour).padStart(2, '0');
+              const mm = String(data.alarmMinute).padStart(2, '0');
+              setAlarmTimeStr(`${hh}:${mm}`);
+              setAllsetMode('daily');
+              setPage('allset');
+            });
+          }}
+        />
+      )}
+      {page === 'meditation'    && <MeditationScreen    onDone={() => setPage('mountain-path')} />}
+      {page === 'mountain-path' && <MountainPathScreen  onDone={() => setPage('daytime')} />}
+      {page === 'daytime'          && <DaytimeScreen          onEvening={() => setPage('evening')} />}
+      {page === 'evening'          && <EveningScreen          onDone={() => setPage('summary')} />}
+      {page === 'summary'          && <SummaryScreen onDone={() => setPage('alarm')} />}
+      {page === 'paywall'          && (
+        <PaywallScreen
+          trialExpired={true}
+          daysLeft={daysLeft}
+          onPurchased={() => setPage('alarm')}
+        />
+      )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root:          { flex:1 },
-  nav:           { position:'absolute', bottom:32, left:24, right:24, flexDirection:'row', justifyContent:'space-between', backgroundColor:'rgba(234,230,220,0.92)', borderRadius:32, paddingVertical:8, paddingHorizontal:12, borderWidth:1, borderColor:'rgba(42,46,36,0.1)' },
-  navBtn:        { width:40, height:40, borderRadius:20, alignItems:'center', justifyContent:'center' },
-  navBtnActive:  { backgroundColor:'rgba(42,46,36,0.12)' },
-  navText:       { fontSize:15, color:'rgba(42,46,36,0.35)', fontWeight:'300' },
-  navTextActive: { color:'#2a2e24' },
+  root: { flex:1 },
 });

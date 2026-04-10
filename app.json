@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#dedad2"
@@ -18,7 +19,11 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.VIBRATE"
       ],
       "package": "com.tianchenggao.ZenWakeup"
     },
@@ -37,7 +42,14 @@
           "backgroundColor": "#dedad2"
         }
       ],
-      "expo-audio"
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/sounds/alarm_bell.wav"]
+        }
+      ],
+      "expo-audio",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
