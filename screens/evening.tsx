@@ -82,7 +82,7 @@ const CrescentIcon = ({ size = 120, INK, GOLD }: { size?: number; INK: string; G
   </Svg>
 );
 
-const MoonPhase = ({ phase, size = 52 }: { phase: number; size?: number }) => {
+const MoonPhase = ({ phase, size = 52, INK, GOLD }: { phase: number; size?: number; INK: string; GOLD: string }) => {
   const cx = size / 2, cy = size / 2, r = size * 0.36;
   if (phase === 0) {
     return (
@@ -115,7 +115,7 @@ const MoonPhase = ({ phase, size = 52 }: { phase: number; size?: number }) => {
   );
 };
 
-const EnsoMini = () => (
+const EnsoMini = ({ INK, GOLD }: { INK: string; GOLD: string }) => (
   <Svg width={22} height={22} viewBox="0 0 90 90">
     <Path d="M45 12 A33 33 0 1 1 32 74" fill="none" stroke={INK} strokeWidth={4.5} strokeLinecap="round" opacity={0.55}/>
     <Circle cx={45} cy={45} r={3}   fill={GOLD} opacity={0.6}/>
@@ -123,7 +123,7 @@ const EnsoMini = () => (
   </Svg>
 );
 
-const EnsoLarge = () => (
+const EnsoLarge = ({ INK, GOLD }: { INK: string; GOLD: string }) => (
   <Svg width={120} height={120} viewBox="0 0 90 90">
     <Path d="M45 12 A33 33 0 1 1 32 74" fill="none" stroke={INK} strokeWidth={4.5} strokeLinecap="round" opacity={0.62}/>
     <Circle cx={45} cy={45} r={3}   fill={GOLD} opacity={0.65}/>
@@ -131,7 +131,7 @@ const EnsoLarge = () => (
   </Svg>
 );
 
-const CardDecoration = ({ cardWidth, cardHeight }: { cardWidth: number; cardHeight: number }) => {
+const CardDecoration = ({ cardWidth, cardHeight, INK, GOLD }: { cardWidth: number; cardHeight: number; INK: string; GOLD: string }) => {
   const cx = cardWidth / 2;
   const cy = cardHeight * 0.78;
   const r  = cardWidth * 0.38;
@@ -356,7 +356,7 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
                   onPress={() => { setScore(i); scoreBase.current = i; scoreAnim.setValue(i); }}
                   style={[s.moonBtn, score === i && s.moonBtnActive]}
                 >
-                  <MoonPhase phase={i} size={44} />
+                  <MoonPhase phase={i} size={44} INK={INK} GOLD={GOLD} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -403,7 +403,7 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
             }]}
             {...cardPan.panHandlers}
           >
-            <CardDecoration cardWidth={cardW} cardHeight={cardH} />
+            <CardDecoration cardWidth={cardW} cardHeight={cardH} INK={INK} GOLD={GOLD} />
             <Text style={s.cardNum}>{cardIdx + 1}  /  {REFLECTIONS.length}</Text>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20 }}>
               <Text style={s.cardMainWord}>{REFLECTIONS[cardIdx].label}</Text>
@@ -425,19 +425,19 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
       <Background />
       <Animated.View style={[s.content, { opacity: fadeIn }]}>
         <View style={s.enterMid}>
-          <EnsoLarge />
+          <EnsoLarge INK={INK} GOLD={GOLD} />
           <View style={s.hairline} />
           <Text style={s.mainWord}>Complete</Text>
           <Text style={s.subWord}>Today is complete</Text>
           <View style={{ height: 32 }} />
           <View style={s.summaryBox}>
             <View style={s.summaryRow}>
-              <MoonPhase phase={score} size={36} />
+              <MoonPhase phase={score} size={36} INK={INK} GOLD={GOLD} />
               <Text style={s.summaryText}>{SCORE_LABELS[score]}</Text>
             </View>
             <View style={s.summaryDivider} />
             <View style={s.summaryRow}>
-              <EnsoMini />
+              <EnsoMini INK={INK} GOLD={GOLD} />
               <Text style={s.summaryText}>{REFLECTIONS.length} reflections</Text>
             </View>
           </View>

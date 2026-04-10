@@ -52,8 +52,8 @@ function synthesize(
 
 async function playB64(b64: string, filename: string, volume: number = 1.0) {
   try {
-    const path = FileSystem.cacheDirectory + filename;
-    await FileSystem.writeAsStringAsync(path, b64, { encoding: 'base64' });
+    const path = (FileSystem.cacheDirectory ?? FileSystem.documentDirectory ?? '') + filename;
+    await FileSystem.writeAsStringAsync(path, b64, { encoding: FileSystem.EncodingType.Base64 });
     const { sound } = await Sound.createAsync({ uri: path }, { shouldPlay: true, volume });
     sound.setOnPlaybackStatusUpdate((s: any) => {
       if (s.isLoaded && s.didJustFinish) sound.unloadAsync();
