@@ -15,7 +15,12 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#dedad2"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.tianchenggao.ZenWakeup"
     },
     "web": {
       "output": "static",
@@ -37,6 +42,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2d7c9a29-fdb9-464f-93cc-c60b1d9076b7"
+      }
     }
   }
 }
