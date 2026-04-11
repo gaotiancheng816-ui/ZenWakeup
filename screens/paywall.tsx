@@ -5,9 +5,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Purchases from 'react-native-purchases';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -118,7 +118,7 @@ export default function PaywallScreen({ daysLeft = 0, trialExpired = false, onPu
         <Text style={styles.priceNote}>One-time · Yours forever</Text>
       </View>
 
-      <TouchableOpacity
+      <TapButton
         style={styles.buyButton}
         onPress={handlePurchase}
         disabled={loading}
@@ -128,11 +128,11 @@ export default function PaywallScreen({ daysLeft = 0, trialExpired = false, onPu
         ) : (
           <Text style={styles.buyText}>Support  ›</Text>
         )}
-      </TouchableOpacity>
+      </TapButton>
 
-      <TouchableOpacity onPress={handleRestore} disabled={loading}>
+      <TapButton onPress={handleRestore} disabled={loading}>
         <Text style={styles.restoreText}>Restore purchase</Text>
-      </TouchableOpacity>
+      </TapButton>
 
       <Text style={styles.legalText}>
         One-time payment · No subscription · No auto-renewal

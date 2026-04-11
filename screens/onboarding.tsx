@@ -4,9 +4,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Ellipse, Line, Path } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -190,11 +190,11 @@ export default function OnboardingScreen({ onDone }: Props) {
         <View style={{ height:16 }} />
         <Text style={s.sub}>{slide.sub}</Text>
         <View style={{ height:48 }} />
-        <TouchableOpacity style={s.nextBtn} onPress={goNext}>
+        <TapButton style={s.nextBtn} onPress={goNext}>
           <Text style={s.nextBtnText}>
             {slideIdx === SLIDES.length - 1 ? 'Set Morning Alarm  ›' : 'Next  ›'}
           </Text>
-        </TouchableOpacity>
+        </TapButton>
       </Animated.View>
     </View>
   );

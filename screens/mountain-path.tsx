@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Animated, Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View,
+  Animated, Dimensions, StatusBar, StyleSheet, Text, View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Ellipse, Line, Path, Rect } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -464,9 +465,9 @@ export default function MountainPathScreen({ onDone }: { onDone?: () => void }) 
             <Text style={[s.themeUnlockText, { color: T.gold }]}>
               New style unlocked: {newUnlockTheme.nameZh}
             </Text>
-            <TouchableOpacity onPress={() => setTheme(newUnlockTheme.id)}>
+            <TapButton onPress={() => setTheme(newUnlockTheme.id)}>
               <Text style={[s.themeUnlockBtn, { color: T.ink2 }]}>Apply  ›</Text>
-            </TouchableOpacity>
+            </TapButton>
           </Animated.View>
         )}
 
@@ -509,14 +510,14 @@ export default function MountainPathScreen({ onDone }: { onDone?: () => void }) 
 
         <View style={{ height: 36 }} />
 
-        <TouchableOpacity
+        <TapButton
           style={[s.btn, { borderColor: `${T.ink}30`, borderRadius: T.radiusBtn }]}
           onPress={() => onDone && onDone()}
         >
           <Text style={[s.btnText, { color: T.ink2, letterSpacing: T.fontTitle.letterSpacing - 2 }]}>
             Begin your morning  ›
           </Text>
-        </TouchableOpacity>
+        </TapButton>
 
       </Animated.View>
     </View>

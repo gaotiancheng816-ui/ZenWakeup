@@ -6,9 +6,9 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -330,9 +330,9 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
               </>
             )}
           </View>
-          <TouchableOpacity style={s.btn} onPress={() => setPhase('score')}>
+          <TapButton style={s.btn} onPress={() => setPhase('score')}>
             <Text style={s.btnText}>Begin evening return  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
         </Animated.View>
       </View>
     );
@@ -351,13 +351,13 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
           <View style={s.scoreMid}>
             <View style={s.moonRow}>
               {[0, 1, 2, 3, 4].map(i => (
-                <TouchableOpacity
+                <TapButton
                   key={i}
                   onPress={() => { setScore(i); scoreBase.current = i; scoreAnim.setValue(i); }}
                   style={[s.moonBtn, score === i && s.moonBtnActive]}
                 >
                   <MoonPhase phase={i} size={44} INK={INK} GOLD={GOLD} />
-                </TouchableOpacity>
+                </TapButton>
               ))}
             </View>
             <View style={{ height: 32 }} />
@@ -372,9 +372,9 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
             <Text style={s.scoreLabel}>{SCORE_LABELS[score]}</Text>
             <Text style={s.slideHint}>← slide to choose →</Text>
           </View>
-          <TouchableOpacity style={s.btn} onPress={() => setPhase('reflect')}>
+          <TapButton style={s.btn} onPress={() => setPhase('reflect')}>
             <Text style={s.btnText}>Continue  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
         </Animated.View>
       </View>
     );
@@ -444,9 +444,9 @@ export default function EveningReturnScreen({ onDone }: { onDone?: () => void })
           <View style={{ height: 24 }} />
           <Text style={s.quote}>When you bow deeply to the universe, it bows back</Text>
         </View>
-        <TouchableOpacity style={s.btn} onPress={() => onDone && onDone()}>
+        <TapButton style={s.btn} onPress={() => onDone && onDone()}>
           <Text style={s.btnText}>View today's summary  ›</Text>
-        </TouchableOpacity>
+        </TapButton>
       </Animated.View>
     </View>
   );

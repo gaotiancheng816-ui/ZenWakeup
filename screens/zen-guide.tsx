@@ -4,9 +4,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -128,9 +128,9 @@ export default function ZenGuideScreen({ onReady }: { onReady: () => void }) {
 
         <View style={{ height: 56 }} />
 
-        <TouchableOpacity style={s.btn} onPress={onReady}>
+        <TapButton style={s.btn} onPress={onReady}>
           <Text style={s.btnText}>Next  ›</Text>
-        </TouchableOpacity>
+        </TapButton>
 
       </Animated.View>
     </View>

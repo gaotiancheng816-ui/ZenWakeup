@@ -4,9 +4,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -87,9 +87,9 @@ export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
         <View style={{ height:32 }} />
         <Text style={s.hint}>see you tomorrow at {alarmTime}</Text>
         <View style={{ height: 40 }} />
-        <TouchableOpacity style={s.doneBtn} onPress={onDone}>
+        <TapButton style={s.doneBtn} onPress={onDone}>
           <Text style={s.doneBtnText}>Back to alarm  ›</Text>
-        </TouchableOpacity>
+        </TapButton>
       </Animated.View>
     </View>
   );

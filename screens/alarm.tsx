@@ -8,9 +8,9 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -461,7 +461,7 @@ export default function ZenAlarmScreen({
 
             <View style={s.timePickerRow}>
               <View style={s.pickerCol}>
-                <TouchableOpacity
+                <TapButton
                   onPress={() => {
                     setAlarmHour(h => {
                       const next = Math.min(MAX_HOUR, h + 1);
@@ -473,9 +473,9 @@ export default function ZenAlarmScreen({
                   style={[s.arrowBtn, alarmHour >= MAX_HOUR && s.arrowDisabled]}
                 >
                   <Text style={s.pickerArrow}>▲</Text>
-                </TouchableOpacity>
+                </TapButton>
                 <Text style={s.pickerNum}>{hh}</Text>
-                <TouchableOpacity
+                <TapButton
                   onPress={() => {
                     setAlarmHour(h => Math.max(MIN_HOUR, h - 1));
                     setConfirmed(false);
@@ -483,11 +483,11 @@ export default function ZenAlarmScreen({
                   style={[s.arrowBtn, alarmHour <= MIN_HOUR && s.arrowDisabled]}
                 >
                   <Text style={s.pickerArrow}>▼</Text>
-                </TouchableOpacity>
+                </TapButton>
               </View>
               <Text style={s.pickerColon}>:</Text>
               <View style={s.pickerCol}>
-                <TouchableOpacity
+                <TapButton
                   onPress={() => {
                     if (minuteLocked) return;
                     setAlarmMinute(m => (m + 5) % 60);
@@ -496,9 +496,9 @@ export default function ZenAlarmScreen({
                   style={[s.arrowBtn, minuteLocked && s.arrowDisabled]}
                 >
                   <Text style={s.pickerArrow}>▲</Text>
-                </TouchableOpacity>
+                </TapButton>
                 <Text style={s.pickerNum}>{mm}</Text>
-                <TouchableOpacity
+                <TapButton
                   onPress={() => {
                     if (minuteLocked) return;
                     setAlarmMinute(m => (m - 5 + 60) % 60);
@@ -507,14 +507,14 @@ export default function ZenAlarmScreen({
                   style={[s.arrowBtn, minuteLocked && s.arrowDisabled]}
                 >
                   <Text style={s.pickerArrow}>▼</Text>
-                </TouchableOpacity>
+                </TapButton>
               </View>
             </View>
 
             <Text style={s.rangeHint}>Mindful mornings  ·  4:00 — 10:00</Text>
             <View style={{ height: 20 }} />
 
-            <TouchableOpacity
+            <TapButton
               style={[s.btn, T.mountain === 'weathered' && s.btnWabi]}
               onPress={() => {
                 scheduleAlarmNotification();
@@ -527,7 +527,7 @@ export default function ZenAlarmScreen({
                 <IrregularRect w={176} h={48} color={INK} />
               )}
               <Text style={s.btnText}>{confirmed ? 'Alarm saved  ✓' : 'Confirm  ›'}</Text>
-            </TouchableOpacity>
+            </TapButton>
             <View style={{ height: 8 }} />
             <Text style={s.hintText}>
               {confirmed ? `Waking at  ${hh}:${mm}  tomorrow` : `Tomorrow's alarm set for  ${hh}:${mm}`}

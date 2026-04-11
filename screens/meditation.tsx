@@ -4,9 +4,9 @@ import {
   Dimensions, StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -280,7 +280,7 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
           <View style={{ height: 40 }} />
           <View style={s.durationRow}>
             {DURATIONS.map((d, i) => (
-              <TouchableOpacity
+              <TapButton
                 key={i}
                 style={[s.durationBtn, i === durationIdx && s.durationBtnActive]}
                 onPress={() => setDurationIdx(i)}
@@ -288,13 +288,13 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
                 <Text style={[s.durationLabel, i === durationIdx && s.durationLabelActive]}>
                   {d.label}
                 </Text>
-              </TouchableOpacity>
+              </TapButton>
             ))}
           </View>
           <View style={{ height: 48 }} />
-          <TouchableOpacity style={s.btn} onPress={startMeditation}>
+          <TapButton style={s.btn} onPress={startMeditation}>
             <Text style={s.btnText}>Begin  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
           <View style={{ height: 20 }} />
           <Text style={s.readyHint}>Find a comfortable position · close your eyes</Text>
         </Animated.View>
@@ -323,9 +323,9 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
           <Text style={s.quote}>Walk to where the water ends</Text>
           <Text style={s.quote}>Sit and watch the clouds arise</Text>
           <View style={{ height: 56 }} />
-          <TouchableOpacity style={s.btn} onPress={() => onDone && onDone()}>
+          <TapButton style={s.btn} onPress={() => onDone && onDone()}>
             <Text style={s.btnText}>Begin your morning  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
         </Animated.View>
       </View>
     );
@@ -364,12 +364,12 @@ export default function MeditationScreen({ onDone }: { onDone?: () => void }) {
           ))}
         </View>
         <View style={{ height: 36 }} />
-        <TouchableOpacity onPress={() => {
+        <TapButton onPress={() => {
           setScreen('done');
           updateTodayRecord({ morningDone: true, totalMinutes: Math.floor((totalSeconds - seconds) / 60) + 1 });
         }}>
           <Text style={s.skip}>skip  ›</Text>
-        </TouchableOpacity>
+        </TapButton>
       </Animated.View>
     </View>
   );

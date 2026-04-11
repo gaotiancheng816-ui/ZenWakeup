@@ -4,9 +4,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -148,9 +148,9 @@ export default function IntroMeditationScreen({ onDone }: Props) {
           <View style={{ height:12 }} />
           <Text style={s.readyHint}>inhale as it expands  ·  exhale as it contracts</Text>
           <View style={{ height:48 }} />
-          <TouchableOpacity style={s.btn} onPress={() => setReady(true)}>
+          <TapButton style={s.btn} onPress={() => setReady(true)}>
             <Text style={s.btnText}>Begin  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
         </Animated.View>
       </View>
     );
@@ -173,9 +173,9 @@ export default function IntroMeditationScreen({ onDone }: Props) {
           <View style={{ height:16 }} />
           <Text style={s.doneSub2}>{'This feeling — of stillness after breath —\nis what we return to, every morning.'}</Text>
           <View style={{ height:56 }} />
-          <TouchableOpacity style={s.btn} onPress={onDone}>
+          <TapButton style={s.btn} onPress={onDone}>
             <Text style={s.btnText}>Continue  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
         </Animated.View>
       </View>
     );
@@ -206,9 +206,9 @@ export default function IntroMeditationScreen({ onDone }: Props) {
         <View style={{ height:8 }} />
         <Text style={s.phaseSub}>Follow the orb · let your breath find its rhythm</Text>
         <View style={{ height:64 }} />
-        <TouchableOpacity onPress={() => setDone(true)} style={s.skipBtn}>
+        <TapButton onPress={() => setDone(true)} style={s.skipBtn}>
           <Text style={s.skipText}>skip  ›</Text>
-        </TouchableOpacity>
+        </TapButton>
       </Animated.View>
     </View>
   );

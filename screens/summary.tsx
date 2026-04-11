@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated, Dimensions, ScrollView,
-  StatusBar, StyleSheet, Text, TouchableOpacity, View
+  StatusBar, StyleSheet, Text, View
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { ALL_THEMES, AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
@@ -524,7 +525,7 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
             const unlocked = t.unlockDay <= morningDays;
             const active   = t.id === T.id;
             return (
-              <TouchableOpacity
+              <TapButton
                 key={t.id}
                 style={[s.themeCard, active && s.themeCardActive, !unlocked && s.themeCardLocked]}
                 onPress={() => unlocked && setTheme(t.id)}
@@ -538,7 +539,7 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
                 {!unlocked && (
                   <Text style={s.themeCardHint}>day {t.unlockDay}</Text>
                 )}
-              </TouchableOpacity>
+              </TapButton>
             );
           })}
         </View>
@@ -550,42 +551,42 @@ export default function DailySummaryScreen({ onDone }: { onDone?: () => void }) 
         <View style={{ height:24 }}/>
         <View style={s.alarmSetRow}>
           <View style={s.alarmCol}>
-            <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmHour:(d.alarmHour+1)%24} : d)} style={s.alarmArrow}>
+            <TapButton onPress={() => setAppData(d => d ? {...d, alarmHour:(d.alarmHour+1)%24} : d)} style={s.alarmArrow}>
               <Text style={s.alarmArrowText}>▲</Text>
-            </TouchableOpacity>
+            </TapButton>
             <Text style={s.alarmTime}>{alarmH}</Text>
-            <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmHour:(d.alarmHour-1+24)%24} : d)} style={s.alarmArrow}>
+            <TapButton onPress={() => setAppData(d => d ? {...d, alarmHour:(d.alarmHour-1+24)%24} : d)} style={s.alarmArrow}>
               <Text style={s.alarmArrowText}>▼</Text>
-            </TouchableOpacity>
+            </TapButton>
           </View>
           <Text style={s.alarmColon}>:</Text>
           <View style={s.alarmCol}>
-            <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmMinute:(d.alarmMinute+5)%60} : d)} style={s.alarmArrow}>
+            <TapButton onPress={() => setAppData(d => d ? {...d, alarmMinute:(d.alarmMinute+5)%60} : d)} style={s.alarmArrow}>
               <Text style={s.alarmArrowText}>▲</Text>
-            </TouchableOpacity>
+            </TapButton>
             <Text style={s.alarmTime}>{alarmM}</Text>
-            <TouchableOpacity onPress={() => setAppData(d => d ? {...d, alarmMinute:(d.alarmMinute-5+60)%60} : d)} style={s.alarmArrow}>
+            <TapButton onPress={() => setAppData(d => d ? {...d, alarmMinute:(d.alarmMinute-5+60)%60} : d)} style={s.alarmArrow}>
               <Text style={s.alarmArrowText}>▼</Text>
-            </TouchableOpacity>
+            </TapButton>
           </View>
         </View>
 
-        <TouchableOpacity style={s.saveAlarmBtn} onPress={async () => {
+        <TapButton style={s.saveAlarmBtn} onPress={async () => {
           if (!appData) return;
           await saveAlarmTime(appData.alarmHour, appData.alarmMinute);
           setAlarmSaved(true);
           setTimeout(() => setAlarmSaved(false), 2000);
         }}>
           <Text style={s.saveAlarmText}>Save alarm  ›</Text>
-        </TouchableOpacity>
+        </TapButton>
 
         {alarmSaved && <Text style={s.savedHint}>Alarm saved  ✓</Text>}
 
         <View style={{ height:40 }}/>
         {onDone && (
-          <TouchableOpacity style={s.doneBtn} onPress={onDone}>
+          <TapButton style={s.doneBtn} onPress={onDone}>
             <Text style={s.doneBtnText}>Rest well tonight  ›</Text>
-          </TouchableOpacity>
+          </TapButton>
         )}
         <View style={{ height:80 }}/>
         

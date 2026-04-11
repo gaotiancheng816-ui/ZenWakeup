@@ -4,9 +4,9 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { TapButton } from '../components/tap-button';
 import Svg, { Circle, Ellipse, Line, Path, Rect } from 'react-native-svg';
 // Ellipse, Rect kept for potential future use — used in Svg components above
 import { AppTheme } from '../constants/app-themes';
@@ -266,9 +266,9 @@ export default function DogenScreen({ onDone }: Props) {
           <View style={{ height: 56 }} />
 
           <Animated.View style={{ opacity: btnOpac, width: '100%' }}>
-            <TouchableOpacity style={s.welcomeBtn} onPress={goNext}>
+            <TapButton style={s.welcomeBtn} onPress={goNext}>
               <Text style={s.welcomeBtnText}>Begin  ›</Text>
-            </TouchableOpacity>
+            </TapButton>
           </Animated.View>
         </View>
       </View>
@@ -327,14 +327,14 @@ export default function DogenScreen({ onDone }: Props) {
         <View style={{ height: 48 }} />
 
         <Animated.View style={{ opacity: btnOpac, width: '100%' }}>
-          <TouchableOpacity
+          <TapButton
             style={[s.btn, slide.isFinal && s.btnFinal]}
             onPress={goNext}
           >
             <Text style={[s.btnText, slide.isFinal && s.btnTextFinal]}>
               {slide.btn}
             </Text>
-          </TouchableOpacity>
+          </TapButton>
         </Animated.View>
       </View>
     </View>
