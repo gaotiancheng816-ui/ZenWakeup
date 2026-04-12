@@ -141,12 +141,18 @@ export async function getTrialStatus(): Promise<{
 }
 
 const PAGE_KEY = 'zenwakeup_page';
+// 这些页面跨会话恢复，无需日期限制（用户中途退出后继续）
 const RESTORABLE = ['meditation', 'daytime', 'evening', 'summary'];
+// 这些页面只在当天有效（第二天早上应回到 alarm 页）
+const RESTORABLE_TODAY = ['allset'];
 
 export async function saveCurrentPage(page: string): Promise<void> {
   try {
     if (RESTORABLE.includes(page)) {
       await AsyncStorage.setItem(PAGE_KEY, page);
+    } else if (RESTORABLE_TODAY.includes(page)) {
+      // 存为 "allset:2025-04-12" 格式，加载时校验日期
+      await AsyncStorage.setItem(PAGE_KEY, `${page}:${todayStr()}`);
     } else {
       await AsyncStorage.removeItem(PAGE_KEY);
     }
@@ -154,7 +160,19 @@ export async function saveCurrentPage(page: string): Promise<void> {
 }
 
 export async function loadCurrentPage(): Promise<string | null> {
-  try { return await AsyncStorage.getItem(PAGE_KEY); } catch { return null; }
+  try {
+    const raw = await AsyncStorage.getItem(PAGE_KEY);
+    if (!raw) return null;
+    // 处理带日期的页面（如 "allset:2025-04-12"）
+    const colonIdx = raw.indexOf(':');
+    if (colonIdx > 0) {
+      const pageName = raw.slice(0, colonIdx);
+      const savedDate = raw.slice(colonIdx + 1);
+      // 只在同一天内有效
+      return savedDate === todayStr() ? pageName : null;
+    }
+    return raw;
+  } catch { return null; }
 }
 
 const THEME_KEY = 'zenwakeup_theme';
