@@ -32,9 +32,8 @@ type Page =
 export default function App() {
   const [page, setPage] = useState<Page>('loading');
   const [daysLeft, setDaysLeft] = useState(7);
-  const [isFirstTime,  setIsFirstTime]  = useState(false);
   const [alarmTimeStr, setAlarmTimeStr] = useState('06:00');
-  const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('first');
+  const [allsetMode,   setAllsetMode]   = useState<'first' | 'daily'>('daily');
 
   useEffect(() => {
     // DEV: URL 参数跳页 (?dev=meditation)
@@ -44,6 +43,7 @@ export default function App() {
     }
     loadData().then(async data => {
       if (!data.hasOnboarded) {
+        setAllsetMode('first');   // 首次用户显示 "All Set." 文案
         setPage('dogen');
         return;
       }
@@ -72,7 +72,8 @@ export default function App() {
   }, []);
 
   // 页面变化时持久化，方便从 Focus 等模式返回后恢复
-  useEffect(() => { saveCurrentPage(page); }, [page]);
+  // 跳过 'loading' 状态，避免启动时立即清除已保存页面
+  useEffect(() => { if (page !== 'loading') saveCurrentPage(page); }, [page]);
 
   if (page === 'loading') return <View style={s.root} />;
 

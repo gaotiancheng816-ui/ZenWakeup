@@ -88,7 +88,7 @@ export default function AllSetScreen({ mode, alarmTime, onDone }: Props) {
         <Text style={s.hint}>see you tomorrow at {alarmTime}</Text>
         <View style={{ height: 40 }} />
         <TapButton style={s.doneBtn} onPress={onDone}>
-          <Text style={s.doneBtnText}>Back to alarm  ›</Text>
+          <Text style={s.doneBtnText}>{mode === 'first' ? 'Close  ›' : 'Back to alarm  ›'}</Text>
         </TapButton>
       </Animated.View>
     </View>
