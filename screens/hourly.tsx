@@ -1,4 +1,9 @@
-import * as Notifications from 'expo-notifications';
+import notifee, {
+  AndroidImportance,
+  AndroidVisibility,
+  TriggerType,
+} from '@notifee/react-native';
+import type { TimestampTrigger } from '@notifee/react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -53,7 +58,7 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
   const mist1         = useRef(new Animated.Value(0)).current;
   const mist2         = useRef(new Animated.Value(0)).current;
   const brushY        = useRef(new Animated.Value(0)).current;
-  const hourlyNotifIds = useRef<string[]>([]);
+  const hourlyNotifIds = useRef<(string | undefined)[]>([]);
 
   useEffect(() => {
     loadData().then(data => {
@@ -138,45 +143,55 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
 
   // 后台准点：调度系统通知，app 不在前台时也能响
   useEffect(() => {
-    scheduleHourlyBells();
+    if (Platform.OS !== 'web') scheduleHourlyBells();
     return () => {
-      hourlyNotifIds.current.forEach(id =>
-        Notifications.cancelScheduledNotificationAsync(id).catch(() => {})
-      );
+      // Cancel any pending hourly bells when leaving daytime screen
+      hourlyNotifIds.current.forEach(id => {
+        if (id) notifee.cancelTriggerNotification(id).catch(() => {});
+      });
     };
   }, []);
 
   async function scheduleHourlyBells() {
-    // 先清除上次遗留的整点通知
-    hourlyNotifIds.current.forEach(id =>
-      Notifications.cancelScheduledNotificationAsync(id).catch(() => {})
-    );
+    // Cancel previously scheduled hourly bells
+    hourlyNotifIds.current.forEach(id => {
+      if (id) notifee.cancelTriggerNotification(id).catch(() => {});
+    });
     hourlyNotifIds.current = [];
 
     const EVENING_HOUR = 18;
     const now = new Date();
-    const ids: string[] = [];
+    const ids: (string | undefined)[] = [];
 
     for (let h = now.getHours() + 1; h < EVENING_HOUR; h++) {
-      const trigger = new Date();
-      trigger.setHours(h, 0, 0, 0);
-      if (trigger <= now) continue;
+      const target = new Date();
+      target.setHours(h, 0, 0, 0);
+      if (target <= now) continue;
+
+      const trigger: TimestampTrigger = {
+        type: TriggerType.TIMESTAMP,
+        timestamp: target.getTime(),
+        // no repeatFrequency — these are one-shot for today only
+      };
 
       try {
-        const id = await Notifications.scheduleNotificationAsync({
-          content: {
+        const id = await notifee.createTriggerNotification(
+          {
             title: '·',
             body: 'A moment of quiet',
-            sound: 'alarm_bell.wav',
+            android: {
+              channelId: 'zen-alarm',
+              sound: 'alarm_bell',
+              importance: AndroidImportance.HIGH,
+              visibility: AndroidVisibility.PUBLIC,
+              pressAction: { id: 'default' },
+            },
+            ios: { sound: 'alarm_bell.wav' },
           },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: trigger,
-            ...(Platform.OS === 'android' ? { channelId: 'zen-alarm' } : {}),
-          },
-        });
+          trigger,
+        );
         ids.push(id);
-      } catch (e) {
+      } catch {
         // 通知权限未授予时静默失败
       }
     }

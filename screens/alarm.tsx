@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+import notifee, { EventType } from '@notifee/react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -16,6 +16,7 @@ import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
 import { getMorningGreeting } from '../utils/greetings';
 import { playAlarmBell } from '../utils/sounds';
+import { scheduleAlarm } from '../utils/alarm';
 import { getTodayRecord, loadData, saveAlarmTime, updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
@@ -111,14 +112,7 @@ const MAX_X   = TRACK_W - THUMB - 4;
 const MIN_HOUR = 4;
 const MAX_HOUR = 10;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// (notifee handles display behaviour via the channel config — no global handler needed)
 
 function MountainIcon({ INK, GOLD, BG }: { INK: string; GOLD: string; BG: string }) {
   return (
@@ -215,22 +209,14 @@ export default function ZenAlarmScreen({
       const today = getTodayRecord(data);
       if (today.morningDone) triggeredRef.current = true;
 
-      // 冷启动时检查未处理通知，必须在 loadData 完成后执行
-      // 避免竞态：若 morningDone=true 已将 triggeredRef 置为 true，则不触发闹铃
+      // Cold-start: app was launched via fullScreenAction (lock-screen alarm).
+      // getInitialNotification() returns the notification that opened the app,
+      // but only once — subsequent calls return null (notifee clears it).
       if (Platform.OS !== 'web') {
-        const response = await Notifications.getLastNotificationResponseAsync();
-        if (response && !triggeredRef.current) {
-          // Only trigger if notification was received today — ignore stale history
-          const notifMs = response.notification.date * 1000;
-          const notifDate = new Date(notifMs);
-          const now = new Date();
-          const isToday = notifDate.toDateString() === now.toDateString();
-          // Also ignore if it's more than 4 hours old (user likely dismissed it already)
-          const ageHours = (Date.now() - notifMs) / 3600000;
-          if (isToday && ageHours < 4) {
-            triggeredRef.current = true;
-            triggerAlarm();
-          }
+        const initial = await notifee.getInitialNotification();
+        if (initial && !triggeredRef.current) {
+          triggeredRef.current = true;
+          triggerAlarm();
         }
       }
     });
@@ -247,57 +233,20 @@ export default function ZenAlarmScreen({
       Animated.timing(brushY, { toValue: 0, duration: 15000, useNativeDriver: true }),
     ])).start();
     if (Platform.OS !== 'web') {
-      requestNotificationPermission();
-
-      // app 在前台时收到通知
-      const sub = Notifications.addNotificationReceivedListener(() => {
-        if (!triggeredRef.current) {
+      // Foreground: alarm fires while app is already open on this screen.
+      // EventType.DELIVERED fires when a notification arrives in the foreground.
+      const unsubFg = notifee.onForegroundEvent(({ type }) => {
+        if (type === EventType.DELIVERED && !triggeredRef.current) {
           triggeredRef.current = true;
           triggerAlarm();
         }
       });
-
-      // app 在后台时用户点击通知横幅唤醒
-      const subResponse = Notifications.addNotificationResponseReceivedListener(() => {
-        if (!triggeredRef.current) {
-          triggeredRef.current = true;
-          triggerAlarm();
-        }
-      });
-
-      return () => {
-        sub.remove();
-        subResponse.remove();
-      };
+      return () => unsubFg();
     }
   }, []);
 
-  async function requestNotificationPermission() {
-    const { status } = await Notifications.requestPermissionsAsync({
-      ios: { allowAlert: true, allowBadge: true, allowSound: true },
-    });
-    if (status !== 'granted') console.log('Notification permission denied');
-  }
-
   async function scheduleAlarmNotification() {
-    if (Platform.OS === 'web') return;
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Awakening',
-        body: 'Time to begin your morning meditation',
-        sound: 'alarm_bell.wav',
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: alarmHour,
-        minute: alarmMinute,
-        // Links to the MAX-importance Android channel created in _layout.tsx.
-        // On Android 8+, the channel controls sound/vibration; this ensures
-        // the alarm fires at full volume even when the app is killed.
-        ...(Platform.OS === 'android' ? { channelId: 'zen-alarm' } : {}),
-      },
-    });
+    await scheduleAlarm(alarmHour, alarmMinute);
   }
 
   function triggerAlarm() {
