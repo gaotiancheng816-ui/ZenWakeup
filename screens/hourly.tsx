@@ -112,12 +112,28 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
     ])).start();
   }, []);
 
-  // 前台准点：app 可见时直接播音效
+  // 前台准点：精确对齐到下一整分钟边界，避免 setInterval 漂移错过整点
   useEffect(() => {
-    const t = setInterval(() => {
-      if (new Date().getMinutes() === 0) playZenBowl();
-    }, 60000);
-    return () => clearInterval(t);
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let lastRingHour = -1;  // 防止同一小时重复响
+
+    function scheduleNextTick() {
+      const now = new Date();
+      // 距离下一整分钟还有多少毫秒
+      const msToNextMinute =
+        (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+      timeoutId = setTimeout(() => {
+        const t = new Date();
+        if (t.getMinutes() === 0 && t.getHours() !== lastRingHour) {
+          lastRingHour = t.getHours();
+          playZenBowl();
+        }
+        scheduleNextTick(); // 递归安排下一整分钟
+      }, msToNextMinute + 50); // +50ms 缓冲，确保已越过分钟边界
+    }
+
+    scheduleNextTick();
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // 后台准点：调度系统通知，app 不在前台时也能响
