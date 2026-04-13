@@ -47,6 +47,10 @@ export default function App() {
         setPage('dogen');
         return;
       }
+      // Always sync alarm time from storage so allset page shows the correct time
+      const hh = String(data.alarmHour ?? 6).padStart(2, '0');
+      const mm = String(data.alarmMinute ?? 0).padStart(2, '0');
+      setAlarmTimeStr(`${hh}:${mm}`);
       const trial = await getTrialStatus();
       if (!trial.isPurchased && trial.trialExpired) {
         setPage('paywall');
