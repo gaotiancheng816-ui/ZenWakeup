@@ -1,8 +1,10 @@
-import notifee, { EventType } from '@notifee/react-native';
+import notifee, { AndroidNotificationSetting, EventType } from '@notifee/react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  AppState,
   Dimensions,
+  Linking,
   PanResponder,
   Platform,
   StatusBar,
@@ -181,9 +183,10 @@ export default function ZenAlarmScreen({
   const s = makeStyles(T);
   const [alarmHour,   setAlarmHour]   = useState(6);
   const [alarmMinute, setAlarmMinute] = useState(0);
-  const [phase,       setPhase]       = useState<'set'|'ringing'>('set');
-  const [greeting,    setGreeting]    = useState('');
-  const [confirmed,   setConfirmed]   = useState(false);
+  const [phase,          setPhase]          = useState<'set'|'ringing'>('set');
+  const [greeting,       setGreeting]       = useState('');
+  const [confirmed,      setConfirmed]      = useState(false);
+  const [needsAlarmPerm, setNeedsAlarmPerm] = useState(false);
 
   const triggeredRef  = useRef(false);
   const ringingRef    = useRef(false);
@@ -208,6 +211,13 @@ export default function ZenAlarmScreen({
       // 今天已经唤醒过了 → 屏蔽所有通知触发，避免重新进入闹铃响铃界面
       const today = getTodayRecord(data);
       if (today.morningDone) triggeredRef.current = true;
+
+      // Android 12+: check SCHEDULE_EXACT_ALARM permission
+      if (Platform.OS === 'android') {
+        notifee.getNotificationSettings().then(s => {
+          setNeedsAlarmPerm(s.android.alarm === AndroidNotificationSetting.DISABLED);
+        }).catch(() => {});
+      }
 
       // Cold-start: app was launched via fullScreenAction (lock-screen alarm).
       // getInitialNotification() returns the notification that opened the app,
@@ -244,6 +254,26 @@ export default function ZenAlarmScreen({
       return () => unsubFg();
     }
   }, []);
+
+  // Re-check exact alarm permission when app returns to foreground
+  // (user may have just granted it in Settings)
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        notifee.getNotificationSettings().then(s => {
+          setNeedsAlarmPerm(s.android.alarm === AndroidNotificationSetting.DISABLED);
+        }).catch(() => {});
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  function openAlarmPermSettings() {
+    Linking.sendIntent('android.settings.REQUEST_SCHEDULE_EXACT_ALARM').catch(() => {
+      Linking.openSettings();
+    });
+  }
 
   async function scheduleAlarmNotification() {
     await scheduleAlarm(alarmHour, alarmMinute);
@@ -408,6 +438,16 @@ export default function ZenAlarmScreen({
 
             <View style={{ height: 16 }} />
 
+            {/* Android 12+: exact alarm permission required for reliable wakeup */}
+            {needsAlarmPerm && (
+              <TapButton onPress={openAlarmPermSettings} style={s.permBanner}>
+                <Text style={s.permBannerTitle}>⚠  Alarm permission needed</Text>
+                <Text style={s.permBannerSub}>
+                  Tap to enable  ·  Settings → Alarms & reminders
+                </Text>
+              </TapButton>
+            )}
+
             <View style={s.timePickerRow}>
               <View style={s.pickerCol}>
                 <TapButton
@@ -571,6 +611,10 @@ function makeStyles(T: AppTheme) {
     pickerNum:     { fontSize:64, color:INK, fontWeight:'200', letterSpacing:4 },
     pickerColon:   { fontSize:48, color:INK2, fontWeight:'200', marginBottom:8 },
     rangeHint:     { fontSize:10, color:INK3, letterSpacing:2, opacity:0.35, marginTop:4 },
+
+    permBanner:      { borderWidth:1, borderColor:`${T.gold}88`, backgroundColor:`${T.gold}18`, borderRadius:6, paddingHorizontal:20, paddingVertical:12, marginBottom:8, alignItems:'center', gap:4 },
+    permBannerTitle: { fontSize:12, color:T.gold, letterSpacing:1, fontWeight:'500' },
+    permBannerSub:   { fontSize:11, color:T.gold, letterSpacing:0.5, opacity:0.75 },
 
     btn:      { borderWidth:1, borderColor:`${INK}38`, paddingHorizontal:32, paddingVertical:14, borderRadius: T.radiusBtn },
     btnText:  { fontSize:13, color:INK2, letterSpacing:3, fontWeight:'400' },
