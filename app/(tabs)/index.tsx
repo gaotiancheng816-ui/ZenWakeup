@@ -59,7 +59,8 @@ export default function App() {
       setDaysLeft(trial.daysLeft);
       // 恢复上次页面（meditation/daytime/evening/summary），避免 Focus 模式返回后丢失进度
       const saved = await loadCurrentPage();
-      if (saved) {
+      const todayRec = getTodayRecord(data);
+      if (saved && !(saved === 'allset' && todayRec.morningDone)) {
         setPage(saved as Page);
       } else {
         // 无保存页面时，根据今日进度决定显示 alarm 还是 daytime/evening

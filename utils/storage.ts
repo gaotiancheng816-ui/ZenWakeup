@@ -151,8 +151,8 @@ export async function saveCurrentPage(page: string): Promise<void> {
     if (RESTORABLE.includes(page)) {
       await AsyncStorage.setItem(PAGE_KEY, page);
     } else if (RESTORABLE_TODAY.includes(page)) {
-      // 存为 "allset:2025-04-12" 格式，加载时校验日期
-      await AsyncStorage.setItem(PAGE_KEY, `${page}:${todayStr()}`);
+      // 存为 "allset:TIMESTAMP"，20 小时内有效（覆盖晚上设闹 → 第二天早上响铃的完整睡眠周期）
+      await AsyncStorage.setItem(PAGE_KEY, `${page}:${Date.now()}`);
     } else {
       await AsyncStorage.removeItem(PAGE_KEY);
     }
@@ -167,9 +167,14 @@ export async function loadCurrentPage(): Promise<string | null> {
     const colonIdx = raw.indexOf(':');
     if (colonIdx > 0) {
       const pageName = raw.slice(0, colonIdx);
-      const savedDate = raw.slice(colonIdx + 1);
-      // 只在同一天内有效
-      return savedDate === todayStr() ? pageName : null;
+      const savedValue = raw.slice(colonIdx + 1);
+      // 时间戳格式（新版）：20 小时窗口
+      if (/^\d{10,}$/.test(savedValue)) {
+        const EXPIRY_MS = 20 * 60 * 60 * 1000;
+        return (Date.now() - Number(savedValue)) < EXPIRY_MS ? pageName : null;
+      }
+      // 旧版日期格式兼容：直接过期
+      return null;
     }
     return raw;
   } catch { return null; }
