@@ -153,10 +153,14 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
   }, []);
 
   async function scheduleHourlyBells() {
-    // Cancel previously scheduled hourly bells
-    hourlyNotifIds.current.forEach(id => {
-      if (id) notifee.cancelTriggerNotification(id).catch(() => {});
-    });
+    // Cancel ALL previously scheduled hourly bells by data tag — this handles
+    // the case where the component remounted and the ref was reset to [].
+    const existing = await notifee.getTriggerNotifications();
+    for (const n of existing) {
+      if (n.notification.data?.type === 'hourly_bell') {
+        await notifee.cancelTriggerNotification(n.notification.id!).catch(() => {});
+      }
+    }
     hourlyNotifIds.current = [];
 
     const EVENING_HOUR = 18;
@@ -179,6 +183,7 @@ export default function DaytimeScreen({ onEvening }: { onEvening?: () => void })
           {
             title: '·',
             body: 'A moment of quiet',
+            data: { type: 'hourly_bell' },
             android: {
               channelId: 'zen-alarm',
               sound: 'alarm_bell',
