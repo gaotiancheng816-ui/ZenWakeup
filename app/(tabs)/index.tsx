@@ -75,8 +75,19 @@ export default function App() {
 
       // 恢复上次页面（meditation/daytime/evening/summary），避免 Focus 模式返回后丢失进度
       const saved = await loadCurrentPage();
-      if (saved && !(saved === 'allset' && todayRec.morningDone)) {
-        setPage(saved as Page);
+
+      // If allset is saved but the alarm time has already passed without ringing,
+      // treat it as expired — show alarm page so user can re-set for tomorrow.
+      let effectiveSaved = saved;
+      if (saved === 'allset' && !todayRec.morningDone) {
+        const now = new Date();
+        const alarmTime = new Date();
+        alarmTime.setHours(data.alarmHour ?? 6, data.alarmMinute ?? 0, 0, 0);
+        if (now > alarmTime) effectiveSaved = null;
+      }
+
+      if (effectiveSaved && !(effectiveSaved === 'allset' && todayRec.morningDone)) {
+        setPage(effectiveSaved as Page);
       } else {
         // 无保存页面时，根据今日进度决定显示 alarm 还是 daytime/evening
         if (todayRec.eveningDone) {
