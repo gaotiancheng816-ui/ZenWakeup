@@ -18,7 +18,7 @@ import { AppTheme } from '../constants/app-themes';
 import { useTheme } from '../utils/theme-context';
 import { getMorningGreeting } from '../utils/greetings';
 import { playAlarmBell } from '../utils/sounds';
-import { scheduleAlarm } from '../utils/alarm';
+import { scheduleAlarm, scheduleTestAlarm } from '../utils/alarm';
 import { getTodayRecord, loadData, saveAlarmTime, updateTodayRecord } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
@@ -187,6 +187,12 @@ export default function ZenAlarmScreen({
   const [greeting,       setGreeting]       = useState('');
   const [confirmed,      setConfirmed]      = useState(false);
   const [needsAlarmPerm, setNeedsAlarmPerm] = useState(false);
+  const [testMode,       setTestMode]       = useState(false);
+  const [testFired,      setTestFired]      = useState(false);
+  const [testSecsLeft,   setTestSecsLeft]   = useState(0);
+  const testTapCount  = useRef(0);
+  const testTapTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const testCountdown = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const triggeredRef  = useRef(false);
   const ringingRef    = useRef(false);
@@ -251,8 +257,16 @@ export default function ZenAlarmScreen({
           triggerAlarm();
         }
       });
-      return () => unsubFg();
+      return () => {
+        unsubFg();
+        if (testCountdown.current) clearInterval(testCountdown.current);
+        if (testTapTimer.current)  clearTimeout(testTapTimer.current);
+      };
     }
+    return () => {
+      if (testCountdown.current) clearInterval(testCountdown.current);
+      if (testTapTimer.current)  clearTimeout(testTapTimer.current);
+    };
   }, []);
 
   // Re-check exact alarm permission when app returns to foreground
@@ -277,6 +291,33 @@ export default function ZenAlarmScreen({
 
   async function scheduleAlarmNotification() {
     await scheduleAlarm(alarmHour, alarmMinute);
+  }
+
+  /** Hidden 5-tap on the title zone activates test mode. */
+  function handleTitleTap() {
+    testTapCount.current += 1;
+    if (testTapTimer.current) clearTimeout(testTapTimer.current);
+    testTapTimer.current = setTimeout(() => { testTapCount.current = 0; }, 1500);
+    if (testTapCount.current >= 5) {
+      testTapCount.current = 0;
+      setTestMode(m => !m);
+      setTestFired(false);
+      if (testCountdown.current) { clearInterval(testCountdown.current); testCountdown.current = null; }
+    }
+  }
+
+  async function fireTestAlarm() {
+    const SECS = 60;
+    await scheduleTestAlarm(SECS);
+    setTestFired(true);
+    setTestSecsLeft(SECS);
+    if (testCountdown.current) clearInterval(testCountdown.current);
+    testCountdown.current = setInterval(() => {
+      setTestSecsLeft(s => {
+        if (s <= 1) { clearInterval(testCountdown.current!); testCountdown.current = null; return 0; }
+        return s - 1;
+      });
+    }, 1000);
   }
 
   function triggerAlarm() {
@@ -406,7 +447,7 @@ export default function ZenAlarmScreen({
             {T.mountain !== 'weathered' && <MountainIcon INK={INK} GOLD={GOLD} BG={BG} />}
             {T.mountain !== 'weathered' && <View style={{ height: 8 }} />}
 
-            <View style={s.titleZone}>
+            <TapButton onPress={handleTitleTap} style={s.titleZone}>
               {/* 水墨: 竖排中文副标 */}
               {T.mountain === 'brushstroke' && (
                 <Text style={s.inkSubLabel}>觉  醒</Text>
@@ -434,9 +475,26 @@ export default function ZenAlarmScreen({
               <Text style={s.guideText}>
                 Set the time for tomorrow's{'\n'}first morning meditation.
               </Text>
-            </View>
+            </TapButton>
 
             <View style={{ height: 16 }} />
+
+            {/* DEV: test mode banner — activated by tapping title zone 5× */}
+            {testMode && (
+              <View style={s.testBanner}>
+                <Text style={s.testBannerTitle}>⚡  TEST MODE</Text>
+                {!testFired ? (
+                  <TapButton onPress={fireTestAlarm} style={s.testFireBtn}>
+                    <Text style={s.testFireText}>Fire alarm in 60 s</Text>
+                  </TapButton>
+                ) : (
+                  <Text style={s.testCountText}>
+                    {testSecsLeft > 0 ? `Alarm fires in ${testSecsLeft}s…` : 'Alarm delivered ✓'}
+                  </Text>
+                )}
+                <Text style={s.testHint}>Tap title 5× again to dismiss</Text>
+              </View>
+            )}
 
             {/* Android 12+: exact alarm permission required for reliable wakeup */}
             {needsAlarmPerm && (
@@ -632,5 +690,13 @@ function makeStyles(T: AppTheme) {
     track:          { width:TRACK_W, height:56, borderRadius:28, borderWidth:1, borderColor:`${INK}1f`, backgroundColor: T.bgMist, justifyContent:'center', paddingHorizontal:2, overflow:'hidden' },
     trackSvg:       { position:'absolute', left:THUMB, top:0 },
     thumb:          { width:THUMB, height:THUMB, borderRadius:THUMB/2, backgroundColor: T.bgCard, borderWidth:1, borderColor:`${INK}26`, alignItems:'center', justifyContent:'center' },
+
+    // DEV test mode
+    testBanner:     { borderWidth:1, borderColor:'#c0392b55', backgroundColor:'#c0392b12', borderRadius:6, paddingHorizontal:20, paddingVertical:14, marginBottom:8, alignItems:'center', gap:8, width:TRACK_W },
+    testBannerTitle:{ fontSize:11, color:'#c0392b', letterSpacing:2, fontWeight:'600' },
+    testFireBtn:    { borderWidth:1, borderColor:'#c0392b88', paddingHorizontal:24, paddingVertical:10, borderRadius:4 },
+    testFireText:   { fontSize:13, color:'#c0392b', letterSpacing:1, fontWeight:'500' },
+    testCountText:  { fontSize:13, color:'#c0392b', letterSpacing:1, fontWeight:'400' },
+    testHint:       { fontSize:10, color:'#c0392b', letterSpacing:1, opacity:0.55 },
   });
 }

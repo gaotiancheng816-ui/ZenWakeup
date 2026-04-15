@@ -46,9 +46,11 @@ export async function scheduleAlarm(hour: number, minute: number): Promise<void>
     type: TriggerType.TIMESTAMP,
     timestamp: nextAlarmMs(hour, minute),
     repeatFrequency: RepeatFrequency.DAILY,
-    alarmManager: {
-      allowWhileIdle: true, // fires even in Doze mode
-    },
+    // alarmManager: true → uses Android setAlarmClock() which:
+    //  • shows alarm clock icon in status bar
+    //  • is protected from battery optimisation
+    //  • fires reliably even in Doze mode (better than allowWhileIdle)
+    alarmManager: true,
   };
 
   await notifee.createTriggerNotification(
@@ -86,4 +88,44 @@ export async function scheduleAlarm(hour: number, minute: number): Promise<void>
 export async function cancelAlarm(): Promise<void> {
   if (Platform.OS === 'web') return;
   await notifee.cancelTriggerNotification(ALARM_NOTIF_ID);
+}
+
+/**
+ * DEV/TEST — Schedule a one-shot alarm N seconds from now (no daily repeat).
+ * Lets you verify the full alarm delivery pipeline in ~60 s instead of overnight.
+ */
+export async function scheduleTestAlarm(seconds: number): Promise<void> {
+  if (Platform.OS === 'web') return;
+
+  await notifee.cancelTriggerNotification(ALARM_NOTIF_ID);
+
+  const trigger: TimestampTrigger = {
+    type:         TriggerType.TIMESTAMP,
+    timestamp:    Date.now() + seconds * 1000,
+    alarmManager: true,
+    // No repeatFrequency — fires once only
+  };
+
+  await notifee.createTriggerNotification(
+    {
+      id:    ALARM_NOTIF_ID,
+      title: 'Awakening',
+      body:  'Time to begin your morning meditation',
+      android: {
+        channelId:        ALARM_CHANNEL,
+        sound:            'alarm_bell',
+        category:         AndroidCategory.ALARM,
+        importance:       AndroidImportance.HIGH,
+        visibility:       AndroidVisibility.PUBLIC,
+        fullScreenAction: { id: 'default', launchActivity: 'default' },
+        pressAction:      { id: 'default', launchActivity: 'default' },
+      },
+      ios: {
+        sound:          'alarm_bell.wav',
+        critical:       true,
+        criticalVolume: 1.0,
+      },
+    },
+    trigger,
+  );
 }
