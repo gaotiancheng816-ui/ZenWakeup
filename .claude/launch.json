@@ -7,6 +7,21 @@
       "runtimeArgs": ["/c", "node_modules\\.bin\\expo.cmd", "start", "--web", "--port", "8083"],
       "port": 8083,
       "autoPort": false
+    },
+    {
+      "name": "yiri-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "D:\\YiRi\\node_modules\\.bin\\expo.cmd", "start", "--web", "--port", "8085"],
+      "cwd": "D:\\YiRi",
+      "port": 8085,
+      "autoPort": false
+    },
+    {
+      "name": "yiri-prototype",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "node_modules\\.bin\\serve.cmd", "-l", "8084", "C:\\Users\\52849\\ZenWakeup\\.claude\\worktrees\\jolly-hermann-1b29da"],
+      "port": 8084,
+      "autoPort": false
     }
   ]
 }
