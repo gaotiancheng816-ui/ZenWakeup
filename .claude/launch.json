@@ -22,6 +22,27 @@
       "runtimeArgs": ["/c", "node_modules\\.bin\\serve.cmd", "-l", "8084", "C:\\Users\\52849\\ZenWakeup\\.claude\\worktrees\\jolly-hermann-1b29da"],
       "port": 8084,
       "autoPort": false
+    },
+    {
+      "name": "cultivation-mockup",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npx", "serve", "-l", "3456", "D:\\CultivationApp\\mockup"],
+      "port": 3456,
+      "autoPort": false
+    },
+    {
+      "name": "craden-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd /d D:\\Craden && node_modules\\.bin\\expo.cmd start --web --port 8086"],
+      "port": 8086,
+      "autoPort": false
+    },
+    {
+      "name": "craden-svg-preview",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npx", "serve", "-l", "8087", "D:\\Craden"],
+      "port": 8087,
+      "autoPort": false
     }
   ]
 }
