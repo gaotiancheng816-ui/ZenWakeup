@@ -140,3 +140,6 @@ dist
 
 expo-env.d.ts
 # @end expo-cli
+
+# Claude Code local config (may contain references to other local projects)
+.claude/launch.json
